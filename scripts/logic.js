@@ -1,77 +1,163 @@
-// VELOX PRO LOGIC CORE v4.0
+// VELOXTRADE ULTIMATE LOGIC v5.0
 
-// 1. AUTHENTICATION LOGIC
-function toggleAuthMode() {
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
-    
-    if (loginForm.classList.contains('hidden')) {
-        loginForm.classList.remove('hidden');
-        signupForm.classList.add('hidden');
+// 1. AUTH & INIT
+function switchAuth(type) {
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('signup-form').classList.add('hidden');
+    document.getElementById('tab-login').classList.remove('bg-yellow-400', 'text-black');
+    document.getElementById('tab-login').classList.add('text-gray-400');
+    document.getElementById('tab-signup').classList.remove('bg-yellow-400', 'text-black');
+    document.getElementById('tab-signup').classList.add('text-gray-400');
+
+    if(type === 'login') {
+        document.getElementById('login-form').classList.remove('hidden');
+        document.getElementById('tab-login').classList.add('bg-yellow-400', 'text-black');
+        document.getElementById('tab-login').classList.remove('text-gray-400');
     } else {
-        loginForm.classList.add('hidden');
-        signupForm.classList.remove('hidden');
+        document.getElementById('signup-form').classList.remove('hidden');
+        document.getElementById('tab-signup').classList.add('bg-yellow-400', 'text-black');
+        document.getElementById('tab-signup').classList.remove('text-gray-400');
     }
 }
 
-function handleAuth(type) {
-    // Basic validation simulation
-    const btn = event.target;
-    const originalText = btn.innerText;
-    btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> PROCESSING...';
-
+function handleLogin() {
+    const btn = event.currentTarget;
+    btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> AUTHENTICATING...';
+    
     setTimeout(() => {
         document.getElementById('auth-screen').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
-            document.getElementById('app-container').classList.add('slide-in');
+            startMarketSimulation(); // Start the AI Brain
         }, 500);
     }, 1500);
 }
 
-// 2. NAVIGATION & TABS
+// 2. NAVIGATION
 function switchTab(tabId) {
-    // Hide all panels
-    document.querySelectorAll('.tab-panel').forEach(el => {
-        el.classList.remove('active-panel');
-        el.style.opacity = '0';
+    document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.remove('active-panel');
+        p.style.opacity = '0';
     });
-    
-    // Show clicked panel
     const target = document.getElementById('tab-' + tabId);
     target.classList.add('active-panel');
     setTimeout(() => target.style.opacity = '1', 50);
 
-    // Update Bottom Nav Colors
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('text-emerald-400');
-        btn.classList.add('text-slate-500');
+    // Update Nav Icons
+    document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('text-yellow-400', 'active');
+        b.classList.add('text-gray-500');
     });
-    event.currentTarget.classList.remove('text-slate-500');
-    event.currentTarget.classList.add('text-emerald-400');
+    event.currentTarget.classList.add('text-yellow-400', 'active');
+    event.currentTarget.classList.remove('text-gray-500');
 }
 
-// 3. PROFILE SIDEBAR
-function openProfile() {
-    const sidebar = document.getElementById('profile-sidebar');
-    sidebar.classList.remove('-translate-x-full');
+// 3. AI MARKET SCANNER (The Killer Feature)
+function startMarketSimulation() {
+    console.log("AI Scanner Started...");
+    
+    // Simulate finding a trade after 5 seconds
+    setTimeout(() => {
+        triggerPopupSignal();
+    }, 5000);
 }
 
-function closeProfile() {
-    const sidebar = document.getElementById('profile-sidebar');
-    sidebar.classList.add('-translate-x-full');
+function triggerPopupSignal() {
+    // 1. Play Sound (Simulated via console/vibrate)
+    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    console.log("Ringing Bell...");
+
+    // 2. Show Popup
+    const popup = document.getElementById('magic-popup');
+    popup.classList.remove('hidden');
+    popup.classList.add('flex');
 }
 
-// 4. SETTINGS MODAL
-function openSettings(category) {
-    const modal = document.getElementById('settings-modal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+function closePopup() {
+    document.getElementById('magic-popup').classList.add('hidden');
+    document.getElementById('magic-popup').classList.remove('flex');
 }
 
-function closeSettings() {
-    const modal = document.getElementById('settings-modal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+// 4. ONE-CLICK EXECUTION
+let activePositions = [];
+
+function executePopupTrade() {
+    const btn = event.currentTarget;
+    btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> SENDING ORDER...';
+    
+    setTimeout(() => {
+        // Close Popup
+        closePopup();
+        btn.innerHTML = '<i class="fas fa-bolt"></i> ONE-CLICK BUY';
+        
+        // Add to Portfolio
+        const newTrade = {
+            symbol: "BANKNIFTY 48200 CE",
+            avg: 320.00,
+            ltp: 320.00,
+            pnl: 0
+        };
+        activePositions.push(newTrade);
+        updatePortfolioUI();
+        
+        // Switch to Portfolio Tab
+        document.querySelector('button[onclick="switchTab(\'portfolio\')"]').click();
+        
+        // Alert
+        alert("Order Executed via Zerodha! Trade is Live.");
+    }, 1500);
+}
+
+// 5. PORTFOLIO & PNL UPDATE
+function updatePortfolioUI() {
+    const container = document.getElementById('positions-container');
+    container.innerHTML = '';
+    
+    let totalPnL = 0;
+
+    activePositions.forEach(trade => {
+        // Random PnL movement
+        const move = (Math.random() - 0.45) * 5;
+        trade.ltp += move;
+        trade.pnl = (trade.ltp - trade.avg) * 15; // 15 Qty
+        totalPnL += trade.pnl;
+
+        const color = trade.pnl >= 0 ? 'text-green-400' : 'text-red-400';
+        
+        const html = `
+        <div class="velox-card p-4 border-l-4 ${trade.pnl >= 0 ? 'border-green-500' : 'border-red-500'}">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h4 class="font-bold text-white text-sm">${trade.symbol}</h4>
+                    <p class="text-[10px] text-gray-400">Buy: ${trade.avg.toFixed(2)} • LTP: ${trade.ltp.toFixed(2)}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-black ${color}">${trade.pnl > 0 ? '+' : ''}${trade.pnl.toFixed(2)}</p>
+                    <span class="text-[9px] bg-blue-900 text-blue-300 px-1 rounded">MIS</span>
+                </div>
+            </div>
+        </div>`;
+        container.innerHTML += html;
+    });
+
+    const pnlEl = document.getElementById('total-pnl');
+    pnlEl.innerText = `₹${totalPnL.toFixed(2)}`;
+    pnlEl.className = `text-4xl font-black mt-2 ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`;
+
+    // Loop
+    setTimeout(updatePortfolioUI, 1000);
+}
+
+// 6. BROKER CONNECTION
+function connectBroker() {
+    const btn = document.getElementById('btn-broker');
+    const select = document.getElementById('broker-select').value;
+    
+    btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> VERIFYING API...';
+    setTimeout(() => {
+        btn.innerHTML = `<i class="fas fa-check-circle"></i> ${select.toUpperCase()} CONNECTED`;
+        btn.className = "w-full py-3 bg-green-600 text-white rounded-xl font-bold text-xs tracking-widest";
+        alert(`${select} linked successfully! Auto-trading enabled.`);
+    }, 2000);
 }
