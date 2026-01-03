@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Settings - Smart Alpha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #001f1f; color: white; transition: 0.5s; }
+        .dark-mode { background: #000000 !important; }
+        .card { background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        input, select { background: #002b2b !important; border: 1px solid #004d4d !important; color: white; padding: 12px; border-radius: 12px; width: 100%; }
+    </style>
+</head>
+<body class="p-6">
+    <header class="flex items-center gap-4 mb-8">
+        <button onclick="history.back()"><i class="fas fa-chevron-left text-teal-400"></i></button>
+        <h1 class="text-xl font-black">MASTER SETTINGS</h1>
+    </header>
+
+    <div class="card p-6 mb-6">
+        <h3 class="text-yellow-500 font-bold mb-4 uppercase text-xs tracking-widest">Link Your Trading App</h3>
+        <div class="space-y-4">
+            <select id="brokerSelect">
+                <option value="dhan">Dhan App</option>
+                <option value="zerodha">Zerodha Kite</option>
+                <option value="angel">Angel One</option>
+                <option value="custom">Custom Webhook (Any Software)</option>
+            </select>
+            <input type="password" id="apiKey" placeholder="Enter API Key / Client ID">
+            <button onclick="saveLink()" class="w-full bg-teal-500 text-black font-black py-3 rounded-xl uppercase">Link Now</button>
+        </div>
+    </div>
+
+    <div class="card p-6 mb-6">
+        <h3 class="text-yellow-500 font-bold mb-4 uppercase text-xs tracking-widest">Display Settings</h3>
+        <div class="flex justify-between items-center">
+            <span>Dark Mode (Full Black)</span>
+            <button onclick="toggleTheme()" class="w-12 h-6 bg-gray-700 rounded-full relative"><div id="toggleBall" class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 transition-all"></div></button>
+        </div>
+    </div>
+
+    <div class="space-y-3">
+        <div class="card p-4 flex justify-between"><span>Profile Settings</span> <i class="fas fa-user-edit text-gray-500"></i></div>
+        <div class="card p-4 flex justify-between"><span>Account & Funds</span> <i class="fas fa-wallet text-gray-500"></i></div>
+        <div class="card p-4 flex justify-between" onclick="alert('Support: @SmartAlphaBot')"><span>Customer Support</span> <i class="fas fa-headset text-teal-400"></i></div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const ball = document.getElementById('toggleBall');
+            if(document.body.classList.contains('dark-mode')) {
+                ball.style.left = '28px';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                ball.style.left = '4px';
+                localStorage.setItem('theme', 'teal');
+            }
+        }
+
+        function saveLink() {
+            const broker = document.getElementById('brokerSelect').value;
+            const key = document.getElementById('apiKey').value;
+            if(!key) return alert("कृपया API Key दर्ज करें");
+            localStorage.setItem('broker', broker);
+            localStorage.setItem('apiKey', key);
+            alert(broker.toUpperCase() + " सफलतापूर्वक जुड़ गया है!");
+        }
+    </script>
+</body>
+</html>

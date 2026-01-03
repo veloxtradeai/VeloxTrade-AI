@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VeloxTrade AI - The Speed of Profit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --teal-primary: #008080; --teal-dark: #002b2b; --gold: #fbbf24; }
+        body { background: var(--teal-dark); color: #e0f2f1; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .velox-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; }
+        .btn-premium { background: linear-gradient(135deg, #00b4d8 0%, #008080 100%); box-shadow: 0 10px 20px rgba(0, 128, 128, 0.3); }
+        .nav-active { color: var(--gold); border-top: 3px solid var(--gold); }
+        .tab-content { display: none; }
+        .active-tab { display: block; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <header class="p-5 flex justify-between items-center sticky top-0 bg-[#002b2b]/95 z-50 border-b border-teal-800">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-bolt text-black text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-xl italic tracking-tighter leading-none">VELOXTRADE <span class="text-yellow-400 text-xs block">AI TERMINAL</span></h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex flex-col items-end">
+                <span class="text-[9px] text-green-400 font-bold uppercase tracking-widest">Server Live</span>
+                <span id="live-timer" class="text-[10px] opacity-60">00:00:00</span>
+            </div>
+            <img onclick="showTab('profile')" src="https://ui-avatars.com/api/?name=User&background=008080&color=fff" class="w-9 h-9 rounded-full border-2 border-teal-500 cursor-pointer">
+        </div>
+    </header>
+
+    <main id="home-tab" class="tab-content active-tab p-4 space-y-6">
+        
+        <div id="jackpot-card" class="velox-card p-6 border-l-4 border-yellow-500 relative overflow-hidden">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">Velox Alpha Signal</p>
+                    <h2 id="best-symbol" class="text-4xl font-black italic">SCANNING...</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] opacity-60">ACCURACY</p>
+                    <p id="accuracy" class="text-xl font-bold text-green-400">90%+</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="bg-black/20 p-2 rounded-xl text-center"><p class="text-[8px] opacity-50">ENTRY</p><p id="best-entry" class="text-sm font-bold">₹0.00</p></div>
+                <div class="bg-green-500/10 p-2 rounded-xl text-center"><p class="text-[8px] text-green-400">TARGET</p><p id="best-target" class="text-sm font-bold text-green-400">₹0.00</p></div>
+                <div class="bg-red-500/10 p-2 rounded-xl text-center"><p class="text-[8px] text-red-400">STOPLOSS</p><p id="best-sl" class="text-sm font-bold text-red-400">₹0.00</p></div>
+            </div>
+
+            <button onclick="executeTrade()" class="btn-premium w-full text-white font-black py-4 rounded-2xl flex justify-center items-center gap-2 active:scale-95 transition-all">
+                <i class="fas fa-rocket"></i> EXECUTE ORDER
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <h3 class="text-xs font-bold text-teal-400 tracking-widest uppercase flex justify-between">
+                <span>Market Pulse</span>
+                <i class="fas fa-chart-line"></i>
+            </h3>
+            <div id="stock-list" class="space-y-3">
+                </div>
+        </div>
+    </main>
+
+    <main id="profile-tab" class="tab-content p-6">
+        <h2 class="text-2xl font-black mb-6 italic">MASTER SETTINGS</h2>
+        <div class="space-y-4">
+            <div class="velox-card p-4 flex items-center justify-between" onclick="alert('Profile Loading...')">
+                <div class="flex items-center gap-4">
+                    <i class="fas fa-user-circle text-2xl text-teal-400"></i>
+                    <div><p class="font-bold">My Profile</p><p class="text-[10px] opacity-50">Manage account details</p></div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600"></i>
+            </div>
+            </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 h-20 bg-black/90 backdrop-blur-lg border-t border-teal-900 flex justify-around items-center">
+        <div onclick="showTab('home')" id="home-nav" class="flex flex-col items-center nav-active py-2 transition-all">
+            <i class="fas fa-bolt text-xl"></i><span class="text-[9px] font-bold mt-1 uppercase">Signals</span>
+        </div>
+        <div onclick="alert('Coming Soon')" class="flex flex-col items-center text-gray-500 py-2">
+            <i class="fas fa-briefcase text-xl"></i><span class="text-[9px] font-bold mt-1 uppercase">Portfolio</span>
+        </div>
+        <div onclick="showTab('profile')" id="profile-nav" class="flex flex-col items-center text-gray-500 py-2 transition-all">
+            <i class="fas fa-cog text-xl"></i><span class="text-[9px] font-bold mt-1 uppercase">Settings</span>
+        </div>
+    </nav>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.querySelectorAll('nav div').forEach(n => n.classList.remove('nav-active', 'text-yellow-500'));
+            document.getElementById(tabId + '-tab').classList.add('active-tab');
+            document.getElementById(tabId + '-nav').classList.add('nav-active');
+        }
+
+        // Timer Function
+        setInterval(() => {
+            document.getElementById('live-timer').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // Link with your logic.js here
+    </script>
+</body>
+</html>
