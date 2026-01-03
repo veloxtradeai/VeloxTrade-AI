@@ -1,16 +1,16 @@
-// VeloxTrade AI Logic
-const BACKEND_URL = "https://velox-backend.velox-trade-ai.workers.dev"; // आपका Worker Link
+// VeloxTrade AI - Master Logic v2.0
+const BACKEND_URL = "https://velox-backend.velox-trade-ai.workers.dev"; // आपका सही लिंक
 
-// 1. LOGIN FUNCTION
+// 1. LOGIN SYSTEM
 async function loginUser() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-pass').value;
     const msg = document.getElementById('login-msg');
     const btn = document.querySelector('.btn-premium');
 
-    if(!email || !pass) { msg.innerText = "Please fill all fields"; return; }
-
-    btn.innerText = "VERIFYING...";
+    if(!email || !pass) { msg.innerText = "Please enter details"; return; }
+    
+    btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> VERIFYING...';
     
     try {
         const response = await fetch(`${BACKEND_URL}/login`, {
@@ -22,53 +22,73 @@ async function loginUser() {
         const data = await response.json();
 
         if (data.status === "success") {
-            // Login Success
-            document.getElementById('login-modal').classList.add('hidden-modal');
-            document.getElementById('user-balance').innerText = `₹${data.user.balance}`;
-            startScanning(); // Start getting signals
+            // Screen hatao
+            document.getElementById('login-modal').style.display = 'none';
+            // Balance update karo
+            document.querySelectorAll('#user-balance').forEach(el => el.innerText = `₹${data.user.balance}`);
+            // Scanning shuru karo
+            startScanning();
         } else {
-            msg.innerText = "Invalid Email or Password!";
-            btn.innerText = "SECURE LOGIN";
+            msg.innerText = "Wrong Email or Password!";
+            btn.innerHTML = 'SECURE LOGIN';
         }
-    } catch (error) {
-        msg.innerText = "Server Error. Check Internet.";
-        btn.innerText = "SECURE LOGIN";
+    } catch (e) {
+        msg.innerText = "Connection Error! Check Internet.";
+        btn.innerHTML = 'SECURE LOGIN';
     }
 }
 
-// 2. SIGNAL FETCHING (SCANNING REMOVER)
-async function startScanning() {
-    // Pehle turant fetch karo
-    fetchSignalData();
-    // Fir har 3 second me update karo
-    setInterval(fetchSignalData, 3000);
+// 2. TAB SWITCHING SYSTEM
+function switchTab(tabName) {
+    // Sab tabs chupao
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+    // Sab nav buttons gray karo
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('nav-active', 'text-yellow-400');
+        n.classList.add('text-gray-500');
+    });
+
+    // Jo click kiya wo dikhao
+    document.getElementById(tabName + '-tab').classList.add('active-tab');
+    
+    // Uska button highlight karo
+    const navBtn = document.getElementById('nav-' + tabName);
+    navBtn.classList.add('nav-active');
+    navBtn.classList.remove('text-gray-500');
 }
 
-async function fetchSignalData() {
+// 3. LIVE SIGNALS (Scanning)
+async function startScanning() {
+    fetchData(); // Turant ek baar
+    setInterval(fetchData, 3000); // Har 3 second me
+}
+
+async function fetchData() {
     try {
         const res = await fetch(`${BACKEND_URL}/signals`);
         const data = await res.json();
 
-        // UI Update karo
+        // Data Cards Update
         document.getElementById('best-symbol').innerText = data.symbol;
-        document.getElementById('best-symbol').classList.remove('animate-pulse-slow'); // Animation band
-        
-        document.getElementById('signal-type').innerText = `${data.signal} @ ₹${data.price}`;
+        document.getElementById('signal-price').innerText = `₹${data.price}`;
         document.getElementById('best-entry').innerText = `₹${data.price}`;
         document.getElementById('best-target').innerText = `₹${data.target}`;
         document.getElementById('best-sl').innerText = `₹${data.stoploss}`;
         document.getElementById('accuracy').innerText = data.accuracy;
 
-        // Color Logic
+        // Buy/Sell Colors Logic
+        const badge = document.getElementById('signal-badge');
+        const card = document.querySelector('.border-l-4');
+
         if(data.signal.includes("BUY")) {
-            document.getElementById('signal-type').className = "text-sm font-bold text-green-400 mt-1";
-            document.querySelector('.border-l-4').className = "velox-card p-6 border-l-4 border-green-500 relative overflow-hidden group";
+            badge.innerText = "STRONG BUY";
+            badge.className = "bg-green-500 text-white px-2 py-1 rounded text-[10px] font-bold";
+            card.style.borderColor = "#22c55e"; // Green
         } else {
-            document.getElementById('signal-type').className = "text-sm font-bold text-red-400 mt-1";
-            document.querySelector('.border-l-4').className = "velox-card p-6 border-l-4 border-red-500 relative overflow-hidden group";
+            badge.innerText = "STRONG SELL";
+            badge.className = "bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold";
+            card.style.borderColor = "#ef4444"; // Red
         }
 
-    } catch (e) {
-        console.log("Waiting for server...");
-    }
+    } catch (e) { console.log("Server waiting..."); }
 }
