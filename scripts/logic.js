@@ -1,16 +1,16 @@
-// VeloxTrade AI - Master Logic v2.0
-const BACKEND_URL = "https://velox-backend.velox-trade-ai.workers.dev"; // आपका सही लिंक
+// VELOX PRO LOGIC CORE v2.5
+const BACKEND_URL = "https://velox-backend.velox-trade-ai.workers.dev"; // आपका सर्वर लिंक
 
-// 1. LOGIN SYSTEM
+// 1. AUTHENTICATION SYSTEM
 async function loginUser() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-pass').value;
     const msg = document.getElementById('login-msg');
-    const btn = document.querySelector('.btn-premium');
+    const btn = document.querySelector('.btn-action');
 
-    if(!email || !pass) { msg.innerText = "Please enter details"; return; }
+    if(!email || !pass) { msg.innerText = "ACCESS DENIED: MISSING CREDENTIALS"; return; }
     
-    btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> VERIFYING...';
+    btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> AUTHENTICATING...';
     
     try {
         const response = await fetch(`${BACKEND_URL}/login`, {
@@ -22,45 +22,50 @@ async function loginUser() {
         const data = await response.json();
 
         if (data.status === "success") {
-            // Screen hatao
-            document.getElementById('login-modal').style.display = 'none';
-            // Balance update karo
-            document.querySelectorAll('#user-balance').forEach(el => el.innerText = `₹${data.user.balance}`);
-            // Scanning shuru karo
-            startScanning();
+            msg.className = "text-center text-xs text-green-400 min-h-[20px]";
+            msg.innerText = "ACCESS GRANTED. LOADING MODULES...";
+            setTimeout(() => {
+                document.getElementById('login-modal').style.display = 'none';
+                document.getElementById('user-balance').innerText = `₹${data.user.balance.toLocaleString('en-IN')}`;
+                startScanning();
+            }, 1000);
         } else {
-            msg.innerText = "Wrong Email or Password!";
-            btn.innerHTML = 'SECURE LOGIN';
+            msg.innerText = "INVALID CREDENTIALS DETECTED";
+            btn.innerHTML = 'INITIATE SYSTEM';
         }
     } catch (e) {
-        msg.innerText = "Connection Error! Check Internet.";
-        btn.innerHTML = 'SECURE LOGIN';
+        msg.innerText = "SERVER UNREACHABLE. RETRYING...";
+        btn.innerHTML = 'INITIATE SYSTEM';
     }
 }
 
-// 2. TAB SWITCHING SYSTEM
+// 2. TAB NAVIGATION
 function switchTab(tabName) {
-    // Sab tabs chupao
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-    // Sab nav buttons gray karo
+    document.querySelectorAll('.tab-content').forEach(t => {
+        t.classList.remove('active-tab');
+        t.style.opacity = '0';
+    });
+    
+    // Smooth fade in
+    const active = document.getElementById(tabName + '-tab');
+    active.classList.add('active-tab');
+    setTimeout(() => active.style.opacity = '1', 50);
+
     document.querySelectorAll('.nav-item').forEach(n => {
-        n.classList.remove('nav-active', 'text-yellow-400');
-        n.classList.add('text-gray-500');
+        n.classList.remove('active', 'text-cyan-400');
+        n.classList.add('text-gray-600');
     });
 
-    // Jo click kiya wo dikhao
-    document.getElementById(tabName + '-tab').classList.add('active-tab');
-    
-    // Uska button highlight karo
-    const navBtn = document.getElementById('nav-' + tabName);
-    navBtn.classList.add('nav-active');
-    navBtn.classList.remove('text-gray-500');
+    // Update Icon Styles
+    const navBtn = document.querySelector(`.nav-item[onclick="switchTab('${tabName}')"]`);
+    navBtn.classList.add('active');
+    navBtn.classList.remove('text-gray-600');
 }
 
-// 3. LIVE SIGNALS (Scanning)
+// 3. CORE TRADING LOGIC
 async function startScanning() {
-    fetchData(); // Turant ek baar
-    setInterval(fetchData, 3000); // Har 3 second me
+    fetchData(); 
+    setInterval(fetchData, 3000); 
 }
 
 async function fetchData() {
@@ -68,7 +73,7 @@ async function fetchData() {
         const res = await fetch(`${BACKEND_URL}/signals`);
         const data = await res.json();
 
-        // Data Cards Update
+        // Update UI Elements
         document.getElementById('best-symbol').innerText = data.symbol;
         document.getElementById('signal-price').innerText = `₹${data.price}`;
         document.getElementById('best-entry').innerText = `₹${data.price}`;
@@ -76,19 +81,34 @@ async function fetchData() {
         document.getElementById('best-sl').innerText = `₹${data.stoploss}`;
         document.getElementById('accuracy').innerText = data.accuracy;
 
-        // Buy/Sell Colors Logic
         const badge = document.getElementById('signal-badge');
-        const card = document.querySelector('.border-l-4');
+        const card = document.getElementById('main-signal-card');
 
         if(data.signal.includes("BUY")) {
-            badge.innerText = "STRONG BUY";
-            badge.className = "bg-green-500 text-white px-2 py-1 rounded text-[10px] font-bold";
-            card.style.borderColor = "#22c55e"; // Green
+            badge.innerHTML = '<i class="fas fa-arrow-up"></i> STRONG CALL';
+            badge.className = "bg-green-500 text-black px-3 py-1 rounded-lg text-xs font-bold shadow-[0_0_15px_rgba(34,197,94,0.6)] animate-pulse";
+            card.style.borderColor = "#22c55e"; 
+            document.getElementById('best-symbol').classList.add('text-green-400');
+            document.getElementById('best-symbol').classList.remove('text-red-400');
         } else {
-            badge.innerText = "STRONG SELL";
-            badge.className = "bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold";
-            card.style.borderColor = "#ef4444"; // Red
+            badge.innerHTML = '<i class="fas fa-arrow-down"></i> STRONG PUT';
+            badge.className = "bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse";
+            card.style.borderColor = "#ef4444";
+            document.getElementById('best-symbol').classList.add('text-red-400');
+            document.getElementById('best-symbol').classList.remove('text-green-400');
         }
 
-    } catch (e) { console.log("Server waiting..."); }
+    } catch (e) { console.log("Data sync..."); }
+}
+
+function executeOrder(type) {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> PROCESSING...';
+    
+    setTimeout(() => {
+        alert(`${type} ORDER PLACED SUCCESSFULLY!\nBroker: Simulated\nStatus: Pending -> Complete`);
+        btn.innerHTML = originalText;
+        switchTab('portfolio'); // Auto switch to see trades
+    }, 1500);
 }
