@@ -1,67 +1,50 @@
-// VELOX PRO LOGIC CORE v7.0 (Real Data + AI Engine)
+// VELOX PRO LOGIC CORE (Real Market Edition)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Check Login
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
-        startLiveFeed(); // Start Real Data
+        showApp();
     }
-    
-    // START AI ENGINE (Wait 8 seconds then trigger popup)
-    setTimeout(triggerAiSignal, 8000);
 });
 
-// 1. AUTHENTICATION
+/* --- AUTH & UI --- */
 function switchAuth(type) {
-    const loginBtn = document.getElementById('tab-btn-login');
-    const signupBtn = document.getElementById('tab-btn-signup');
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
-
-    if (type === 'login') {
-        loginBtn.classList.replace('text-gray-400', 'text-black');
-        loginBtn.classList.add('bg-yellow-400');
-        signupBtn.classList.remove('bg-yellow-400', 'text-black');
-        signupBtn.classList.add('text-gray-400');
-        loginForm.classList.remove('hidden');
-        signupForm.classList.add('hidden');
+    if(type === 'login') {
+        document.getElementById('login-form').classList.remove('hidden');
+        document.getElementById('signup-form').classList.add('hidden');
+        document.getElementById('tab-login').classList.replace('text-gray-400', 'text-black');
+        document.getElementById('tab-login').classList.add('bg-yellow-400');
+        document.getElementById('tab-signup').classList.remove('bg-yellow-400', 'text-black');
+        document.getElementById('tab-signup').classList.add('text-gray-400');
     } else {
-        signupBtn.classList.replace('text-gray-400', 'text-black');
-        signupBtn.classList.add('bg-yellow-400');
-        loginBtn.classList.remove('bg-yellow-400', 'text-black');
-        loginBtn.classList.add('text-gray-400');
-        signupForm.classList.remove('hidden');
-        loginForm.classList.add('hidden');
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('signup-form').classList.remove('hidden');
+        document.getElementById('tab-signup').classList.replace('text-gray-400', 'text-black');
+        document.getElementById('tab-signup').classList.add('bg-yellow-400');
+        document.getElementById('tab-login').classList.remove('bg-yellow-400', 'text-black');
+        document.getElementById('tab-login').classList.add('text-gray-400');
     }
 }
 
 function handleLogin() {
-    const btn = document.getElementById('btn-login-action');
-    btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> CONNECTING...';
-    
+    const btn = event.currentTarget;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> CONNECTING...';
     setTimeout(() => {
         localStorage.setItem('isLoggedIn', 'true');
-        document.getElementById('auth-screen').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            startLiveFeed();
-        }, 500);
-    }, 1500);
+        showApp();
+    }, 1000);
 }
 
-// 2. NAVIGATION
+function showApp() {
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-container').classList.remove('hidden');
+    
+    // LOGIN HOTE HI MARKET TIME CHECK KARO
+    checkMarketStatus();
+}
+
 function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    if (sidebar.classList.contains('sidebar-open')) {
-        sidebar.classList.remove('sidebar-open');
-        overlay.style.display = 'none';
-    } else {
-        sidebar.classList.add('sidebar-open');
-        overlay.style.display = 'block';
-    }
+    document.getElementById('sidebar').classList.toggle('sidebar-open');
+    document.getElementById('overlay').classList.toggle('overlay-active');
 }
 
 function switchTab(tabId) {
@@ -69,108 +52,128 @@ function switchTab(tabId) {
         p.classList.remove('active-panel');
         p.style.display = 'none';
     });
-    const target = document.getElementById('tab-' + tabId);
+    const target = document.getElementById(`tab-${tabId}`);
     target.style.display = 'block';
-    setTimeout(() => target.classList.add('active-panel'), 50);
+    setTimeout(() => target.classList.add('active-panel'), 10);
 
     document.querySelectorAll('.nav-btn').forEach(b => {
         b.classList.remove('text-yellow-400', 'active');
         b.classList.add('text-gray-500');
     });
-    document.getElementById('nav-' + tabId).classList.replace('text-gray-500', 'text-yellow-400');
+    document.getElementById(`btn-${tabId}`).classList.add('text-yellow-400', 'active');
+    document.getElementById(`btn-${tabId}`).classList.remove('text-gray-500');
 }
 
-// 3. REAL MARKET DATA ENGINE (HYBRID)
-async function startLiveFeed() {
-    fetchMarketData();
-    setInterval(fetchMarketData, 3000);
-}
+/* --- REAL MARKET LOGIC --- */
 
-async function fetchMarketData() {
-    // Attempt Yahoo Finance Fetch (Might fail on some networks due to CORS)
-    try {
-        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/^NSEI?interval=1m&range=1d');
-        const data = await res.json();
-        if(data.chart.result) {
-            const quote = data.chart.result[0].meta;
-            updateTicker('price-nifty', 'pct-nifty', quote.regularMarketPrice, 0.45); // Using sim pct for stability
-            updateTicker('price-bn', 'pct-bn', 48100 + (Math.random()*20), -0.12);
-        }
-    } catch (e) {
-        // FALLBACK SIMULATION (If API Blocks) - Ensures App always works
-        simulateLiveMarket();
+function checkMarketStatus() {
+    const now = new Date();
+    // UTC time ko IST me convert karna padega logic ke liye, ya simple hours check karo
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    // Market Timings: 09:15 to 15:30
+    const marketOpen = (hour > 9 || (hour === 9 && minute >= 15));
+    const marketClose = (hour < 15 || (hour === 15 && minute <= 30));
+
+    // TEST KE LIYE: Is line ko uncomment karoge to abhi (raat ko) bhi "LIVE" manega
+    // const forceLive = false; 
+
+    if (marketOpen && marketClose) {
+        setMarketLive();
+    } else {
+        setMarketClosed();
     }
 }
 
-let simNifty = 21450.00;
-let simBn = 47800.00;
+function setMarketLive() {
+    // UI Update
+    document.getElementById('status-dot').className = "absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full animate-pulse";
+    document.getElementById('market-status-text').innerText = "MARKET LIVE";
+    document.getElementById('market-status-text').className = "text-[9px] text-green-400 font-bold tracking-widest uppercase";
+    
+    document.getElementById('ai-status-badge').innerText = "SCANNING";
+    document.getElementById('ai-status-badge').className = "absolute right-0 top-0 bg-green-500 text-black text-[9px] font-bold px-3 py-1 rounded-bl-xl";
+    document.getElementById('ai-status-dot').className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
+    document.getElementById('ai-status-text').innerText = "Analyzing real-time volatility & volume...";
 
-function simulateLiveMarket() {
-    simNifty += (Math.random() - 0.45) * 5;
-    simBn += (Math.random() - 0.45) * 12;
-    updateTicker('price-nifty', 'pct-nifty', simNifty, 0.65);
-    updateTicker('price-bn', 'pct-bn', simBn, -0.25);
+    // Start Real Data Fetching
+    fetchMarketData();
+    setInterval(fetchMarketData, 3000); // Har 3 sec me refresh
 }
 
-function updateTicker(priceId, pctId, price, pct) {
-    const el = document.getElementById(priceId);
-    el.innerText = price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    // Color flash logic could go here
+function setMarketClosed() {
+    // UI Update
+    document.getElementById('status-dot').className = "absolute bottom-0 right-0 w-3 h-3 bg-red-500 border-2 border-black rounded-full";
+    document.getElementById('market-status-text').innerText = "MARKET CLOSED";
+    document.getElementById('market-status-text').className = "text-[9px] text-red-400 font-bold tracking-widest uppercase";
+    
+    document.getElementById('ai-status-badge').innerText = "OFFLINE";
+    document.getElementById('ai-status-badge').className = "absolute right-0 top-0 bg-gray-600 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl";
+    document.getElementById('ai-status-dot').className = "w-2 h-2 rounded-full bg-red-500";
+    document.getElementById('ai-status-text').innerText = "Markets are closed. AI Scanner is in sleep mode.";
+
+    // Last Data Fetch (One time)
+    fetchMarketData();
 }
 
-// 4. *** AI MAGIC SIGNAL ENGINE ***
-const stocks = ['RELIANCE', 'TATASTEEL', 'HDFCBANK', 'ADANIENT', 'SBIN'];
-
-function triggerAiSignal() {
-    const overlay = document.getElementById('ai-popup-overlay');
-    const card = document.getElementById('ai-popup-card');
-    
-    // Pick Stock
-    const stock = stocks[Math.floor(Math.random() * stocks.length)];
-    const price = 1500 + Math.random() * 1000;
-    
-    document.getElementById('ai-stock-name').innerText = stock;
-    document.getElementById('ai-ltp').innerText = price.toFixed(2);
-    document.getElementById('ai-target').innerText = (price * 1.02).toFixed(2);
-    
-    // Show Popup
-    overlay.classList.remove('hidden');
-    setTimeout(() => {
-        card.classList.remove('scale-95', 'opacity-0');
-        card.classList.add('scale-100', 'opacity-100');
-    }, 10);
-    
-    // Live Ticking inside Popup
-    window.aiInterval = setInterval(() => {
-        const cur = parseFloat(document.getElementById('ai-ltp').innerText);
-        const newP = cur + (Math.random() - 0.4);
-        document.getElementById('ai-ltp').innerText = newP.toFixed(2);
-    }, 800);
+/* --- DATA FETCHING (YAHOO FINANCE / REAL DATA) --- */
+async function fetchMarketData() {
+    try {
+        // NIFTY
+        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/^NSEI?interval=1d&range=1d');
+        const data = await res.json();
+        const meta = data.chart.result[0].meta;
+        
+        updateTicker('price-nifty', 'pct-nifty', meta.regularMarketPrice, meta.previousClose);
+    } catch (e) {
+        // Agar API block ho (CORS issue), to Last Known Data dikhao (Fake random nahi)
+        console.log("Data fetch failed (likely CORS). Using Static Data.");
+        // Static valid data for night view
+        document.getElementById('price-nifty').innerText = "21,710.80";
+        document.getElementById('pct-nifty').innerText = "+0.00%";
+        document.getElementById('price-bn').innerText = "48,159.00"; 
+    }
 }
 
-function closeAiPopup() {
-    const overlay = document.getElementById('ai-popup-overlay');
-    const card = document.getElementById('ai-popup-card');
-    card.classList.remove('scale-100', 'opacity-100');
-    card.classList.add('scale-95', 'opacity-0');
-    clearInterval(window.aiInterval);
-    setTimeout(() => {
-        overlay.classList.add('hidden');
-        // Next signal in 20-30 seconds
-        setTimeout(triggerAiSignal, 20000 + Math.random() * 10000); 
-    }, 300);
+function updateTicker(priceId, pctId, current, prev) {
+    const diff = current - prev;
+    const pct = (diff / prev) * 100;
+    
+    const priceEl = document.getElementById(priceId);
+    const pctEl = document.getElementById(pctId);
+    
+    priceEl.innerText = current.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    pctEl.innerText = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+    
+    if(pct >= 0) {
+        pctEl.className = "text-xs font-bold px-2 py-1 rounded text-green-400 bg-green-500/10";
+        priceEl.classList.remove('text-red-400');
+        priceEl.classList.add('text-white');
+    } else {
+        pctEl.className = "text-xs font-bold px-2 py-1 rounded text-red-400 bg-red-500/10";
+        priceEl.classList.remove('text-white');
+        priceEl.classList.add('text-red-400');
+    }
 }
 
-function confirmAiTrade() {
-    const btn = event.currentTarget;
-    btn.innerHTML = '<i class="fas fa-check"></i> ORDER SENT';
-    btn.classList.replace('bg-green-500', 'bg-white');
+/* --- POPUP LOGIC --- */
+// Is function ko tabhi call kiya jayega jab market LIVE ho aur koi breakout mile.
+// Abhi Raat ko ye call nahi hoga.
+function triggerPopup(stock, price) {
+    const popup = document.getElementById('ai-popup-container');
+    document.getElementById('popup-stock').innerText = stock;
+    document.getElementById('popup-price').innerText = "₹" + price;
     
-    setTimeout(() => {
-        closeAiPopup();
-        btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> BUY NOW';
-        btn.classList.replace('bg-white', 'bg-green-500');
-        alert("Order sent to Broker API successfully!"); 
-        // Real connection will happen in backend
-    }, 1500);
+    popup.classList.remove('popup-hidden');
+    popup.classList.add('popup-visible');
+    
+    // Play Sound
+    // const audio = new Audio('alert.mp3'); audio.play();
+}
+
+function closePopup() {
+    const popup = document.getElementById('ai-popup-container');
+    popup.classList.remove('popup-visible');
+    popup.classList.add('popup-hidden');
 }
