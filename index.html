@@ -8,22 +8,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        /* --- THEME: TEAL & GOLD (UNCHANGED) --- */
+        /* --- THEME: TEAL & GOLD --- */
         :root { --teal-dark: #002b2b; --teal-light: #004d4d; --gold: #fbbf24; --gold-dark: #d97706; }
         body { background-color: var(--teal-dark); color: #e0f2f1; font-family: 'Rajdhani', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: 90px; overflow-x: hidden; }
         
-        /* UI Components */
         .velox-card { background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(12px); border: 1px solid rgba(251, 191, 36, 0.15); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
         .btn-gold { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); color: #000; font-weight: 800; text-transform: uppercase; border: none; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); }
-        .input-box { background: rgba(0,0,0,0.4); border: 1px solid var(--teal-light); color: white; border-radius: 12px; font-family: 'Rajdhani', sans-serif; }
+        .input-box { background: rgba(0,0,0,0.4); border: 1px solid var(--teal-light); color: white; border-radius: 12px; font-family: 'Rajdhani', sans-serif; outline: none; transition: 0.3s; }
         
-        /* Sidebar & Modals */
+        /* Sidebar & Animation */
         .sidebar { transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .sidebar-open { transform: translateX(0); }
         .overlay { display: none; background: rgba(0,0,0,0.8); position: fixed; inset: 0; z-index: 45; }
-        .overlay-active { display: block; }
         .tab-panel { display: none; opacity: 0; transition: opacity 0.3s; }
         .active-panel { display: block; opacity: 1; }
+        .blink-text { animation: blinking 1s infinite; }
+        @keyframes blinking { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="select-none">
@@ -40,39 +40,38 @@
         </div>
         <div class="velox-card p-6 relative z-10">
             <div class="flex bg-black/40 rounded-xl p-1 mb-6">
-                <button onclick="switchAuth('login')" id="tab-login" class="flex-1 py-3 rounded-lg font-bold bg-yellow-400 text-black">LOGIN</button>
-                <button onclick="switchAuth('signup')" id="tab-signup" class="flex-1 py-3 rounded-lg font-bold text-gray-400">REGISTER</button>
+                <button onclick="switchAuth('login')" id="tab-btn-login" class="flex-1 py-3 rounded-lg font-bold bg-yellow-400 text-black transition-all">LOGIN</button>
+                <button onclick="switchAuth('signup')" id="tab-btn-signup" class="flex-1 py-3 rounded-lg font-bold text-gray-400 transition-all">REGISTER</button>
             </div>
             <div id="login-form" class="space-y-4">
                 <input type="email" id="login-email" value="demo@velox.ai" class="w-full input-box p-4" placeholder="USER ID / EMAIL">
                 <input type="password" id="login-pass" value="123456" class="w-full input-box p-4" placeholder="PASSWORD">
-                <button onclick="handleLogin()" class="btn-gold w-full py-4 rounded-xl text-lg mt-2">ACCESS TERMINAL</button>
+                <button onclick="handleLogin()" id="btn-login-action" class="btn-gold w-full py-4 rounded-xl text-lg mt-2">ACCESS TERMINAL</button>
             </div>
             <div id="signup-form" class="space-y-4 hidden">
                 <input type="text" placeholder="FULL NAME" class="w-full input-box p-4">
                 <input type="tel" placeholder="MOBILE NUMBER" class="w-full input-box p-4">
                 <input type="email" placeholder="EMAIL ID" class="w-full input-box p-4">
-                <button onclick="alert('Account Created! Please Login.')" class="btn-gold w-full py-4 rounded-xl text-lg mt-2">CREATE ACCOUNT</button>
+                <button onclick="switchAuth('login'); alert('Account Created!');" class="btn-gold w-full py-4 rounded-xl text-lg mt-2">CREATE ACCOUNT</button>
             </div>
         </div>
     </div>
 
     <div id="app-container" class="hidden">
-        
         <header class="fixed top-0 w-full z-40 bg-[#002b2b]/95 backdrop-blur-md border-b border-white/5 px-4 py-3 flex justify-between items-center shadow-2xl">
             <div class="flex items-center gap-3" onclick="toggleSidebar()">
                 <div class="w-10 h-10 border-2 border-yellow-400 rounded-full p-0.5 relative">
                     <img src="https://ui-avatars.com/api/?name=User&background=fbbf24&color=000" class="w-full h-full rounded-full">
                     <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></span>
                 </div>
-                <div class="leading-none">
+                <div>
                     <h2 class="font-bold text-white text-lg">Velox User</h2>
                     <p class="text-[9px] text-yellow-400 font-bold tracking-widest uppercase">Tap for Menu</p>
                 </div>
             </div>
             <div class="text-right">
                 <p class="text-[9px] text-gray-400 uppercase font-bold">Live Balance</p>
-                <p class="text-lg font-bold text-white leading-none">₹50,000</p>
+                <p class="text-lg font-bold text-white leading-none">₹<span id="wallet-balance">50,000</span></p>
             </div>
         </header>
 
@@ -85,55 +84,34 @@
                     <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fas fa-times text-white"></i></button>
                 </div>
                 <h2 class="text-2xl font-black text-white">Velox User</h2>
-                <p class="text-xs text-teal-400 font-bold mb-4">+91 9876543210</p>
-                
-                <div class="flex gap-2">
-                    <button class="flex-1 bg-green-600 py-2 rounded-lg font-bold text-xs"><i class="fas fa-plus-circle mr-1"></i> ADD FUNDS</button>
-                    <button class="flex-1 bg-red-600 py-2 rounded-lg font-bold text-xs"><i class="fas fa-arrow-down mr-1"></i> WITHDRAW</button>
+                <div class="flex gap-2 mt-4">
+                    <button class="flex-1 bg-green-600 py-2 rounded-lg font-bold text-xs">ADD FUNDS</button>
+                    <button class="flex-1 bg-red-600 py-2 rounded-lg font-bold text-xs">WITHDRAW</button>
                 </div>
             </div>
-
-            <div class="flex-1 overflow-y-auto p-4 space-y-2">
-                <button onclick="switchTab('settings'); toggleSidebar()" class="w-full p-4 flex items-center gap-4 hover:bg-white/5 rounded-xl transition border border-transparent hover:border-teal-500/30">
-                    <div class="w-8 h-8 rounded bg-yellow-400/10 flex items-center justify-center text-yellow-400"><i class="fas fa-link"></i></div>
-                    <span class="font-bold text-sm">Broker Integration</span>
+            <div class="flex-1 p-4 space-y-2">
+                <button onclick="switchTab('settings'); toggleSidebar()" class="w-full p-4 flex items-center gap-4 hover:bg-white/5 rounded-xl transition">
+                    <i class="fas fa-link text-yellow-400"></i> <span class="font-bold text-sm">Broker Integration</span>
                 </button>
-                <button class="w-full p-4 flex items-center gap-4 hover:bg-white/5 rounded-xl transition border border-transparent hover:border-teal-500/30">
-                    <div class="w-8 h-8 rounded bg-blue-400/10 flex items-center justify-center text-blue-400"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <span class="font-bold text-sm">P&L Reports</span>
+                <button onclick="location.reload()" class="w-full p-4 flex items-center gap-4 text-red-400 mt-10">
+                    <i class="fas fa-sign-out-alt"></i> <span class="font-bold">Logout</span>
                 </button>
-                <button class="w-full p-4 flex items-center gap-4 hover:bg-white/5 rounded-xl transition border border-transparent hover:border-teal-500/30">
-                    <div class="w-8 h-8 rounded bg-purple-400/10 flex items-center justify-center text-purple-400"><i class="fas fa-crown"></i></div>
-                    <span class="font-bold text-sm">Subscription Plans</span>
-                </button>
-                <button class="w-full p-4 flex items-center gap-4 hover:bg-white/5 rounded-xl transition border border-transparent hover:border-teal-500/30">
-                    <div class="w-8 h-8 rounded bg-orange-400/10 flex items-center justify-center text-orange-400"><i class="fas fa-headset"></i></div>
-                    <span class="font-bold text-sm">Help & Support</span>
-                </button>
-            </div>
-
-            <div class="p-4 border-t border-white/5">
-                <button onclick="location.reload()" class="w-full p-4 flex items-center gap-4 text-red-400 hover:bg-red-500/10 rounded-xl transition">
-                    <i class="fas fa-sign-out-alt w-6"></i> <span class="font-bold">Logout Session</span>
-                </button>
-                <p class="text-center text-[9px] text-gray-600 mt-2">v2.1.0 • Connected to Live Server</p>
             </div>
         </div>
 
         <main id="tab-home" class="tab-panel active-panel pt-24 px-4 pb-24 space-y-6">
-            
             <div class="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
                 <div class="min-w-[160px] velox-card p-4 flex justify-between items-center bg-black/40">
                     <div>
                         <p class="text-[10px] text-gray-400 font-bold tracking-widest">NIFTY 50</p>
-                        <p class="font-black text-white text-xl" id="price-nifty">Fetching...</p>
+                        <p class="font-black text-white text-xl" id="price-nifty">Loading...</p>
                     </div>
                     <span class="text-green-400 text-xs font-bold bg-green-500/10 px-2 py-1 rounded" id="pct-nifty">--%</span>
                 </div>
                 <div class="min-w-[160px] velox-card p-4 flex justify-between items-center bg-black/40">
                     <div>
                         <p class="text-[10px] text-gray-400 font-bold tracking-widest">BANKNIFTY</p>
-                        <p class="font-black text-white text-xl" id="price-bn">Fetching...</p>
+                        <p class="font-black text-white text-xl" id="price-bn">Loading...</p>
                     </div>
                     <span class="text-red-400 text-xs font-bold bg-red-500/10 px-2 py-1 rounded" id="pct-bn">--%</span>
                 </div>
@@ -144,92 +122,72 @@
                 <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Scanning Live Markets
                 </h3>
-                <p class="text-xs text-gray-400 leading-relaxed">Analyzing 200+ F&O Stocks for Breakouts with >90% Win Probability...</p>
-                
+                <p class="text-xs text-gray-400 leading-relaxed">System is analyzing 200+ F&O Stocks for confirmed breakouts...</p>
                 <div class="mt-4 h-1 w-full bg-gray-700 rounded-full overflow-hidden">
                     <div class="h-full bg-yellow-400 w-1/3 animate-[loading_1.5s_infinite]"></div>
                 </div>
             </div>
-
-            <div>
-                <h3 class="text-[10px] text-teal-500 font-bold uppercase mb-3 ml-1">Market Tools</h3>
-                <div class="grid grid-cols-4 gap-3">
-                    <div class="bg-black/30 p-3 rounded-xl border border-white/5 text-center active:scale-95 transition cursor-pointer">
-                        <i class="fas fa-filter text-blue-400 text-xl mb-2"></i><p class="text-[9px] font-bold">SCREENER</p>
-                    </div>
-                    <div class="bg-black/30 p-3 rounded-xl border border-white/5 text-center active:scale-95 transition cursor-pointer">
-                        <i class="fas fa-rocket text-purple-400 text-xl mb-2"></i><p class="text-[9px] font-bold">IPO</p>
-                    </div>
-                    <div class="bg-black/30 p-3 rounded-xl border border-white/5 text-center active:scale-95 transition cursor-pointer">
-                        <i class="fas fa-bolt text-yellow-400 text-xl mb-2"></i><p class="text-[9px] font-bold">F&O</p>
-                    </div>
-                    <div class="bg-black/30 p-3 rounded-xl border border-white/5 text-center active:scale-95 transition cursor-pointer">
-                        <i class="fas fa-newspaper text-green-400 text-xl mb-2"></i><p class="text-[9px] font-bold">NEWS</p>
-                    </div>
-                </div>
-            </div>
         </main>
 
-        <main id="tab-portfolio" class="tab-panel pt-24 px-4 pb-24">
-            <h2 class="text-2xl font-black italic mb-6">MY POSITIONS</h2>
-            <div class="velox-card p-6 bg-gradient-to-r from-teal-900 to-black text-center mb-6">
-                <p class="text-xs text-gray-400 tracking-widest uppercase">Total P&L</p>
+        <main id="tab-portfolio" class="tab-panel pt-24 px-4 pb-24 text-center">
+            <h2 class="text-2xl font-black italic mb-6">POSITIONS</h2>
+            <div class="velox-card p-6 bg-gradient-to-r from-teal-900 to-black mb-6">
+                <p class="text-xs text-gray-400 uppercase">Total P&L</p>
                 <h1 id="total-pnl" class="text-4xl font-black text-white mt-2">₹0.00</h1>
             </div>
-            <div class="text-center py-12 opacity-30">
-                <i class="fas fa-folder-open text-5xl mb-4"></i>
-                <p class="text-sm">No Active Trades</p>
-            </div>
+            <div class="opacity-30"><i class="fas fa-folder-open text-5xl mb-4"></i><p>No Active Trades</p></div>
         </main>
 
         <main id="tab-settings" class="tab-panel pt-24 px-4 pb-24 space-y-6">
             <h2 class="text-2xl font-black italic mb-4">SETTINGS</h2>
-
-            <div class="space-y-2">
-                <h3 class="text-[10px] text-teal-500 uppercase font-bold ml-1">Broker Integration</h3>
-                <div class="velox-card p-5 space-y-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-link text-yellow-400"></i>
-                        <p class="text-xs text-gray-300">Link your account to fetch <strong>Real Portfolio</strong> & <strong>Place Orders</strong>.</p>
-                    </div>
-                    <select id="broker-select" class="w-full input-box p-3 bg-black/50 text-sm">
-                        <option>Zerodha (Kite Connect)</option>
-                        <option>Angel One (SmartAPI)</option>
-                        <option>Upstox Pro</option>
-                        <option>Groww (Coming Soon)</option>
-                    </select>
-                    <input type="password" placeholder="ENTER API KEY" class="w-full input-box p-3 text-sm">
-                    <input type="password" placeholder="ENTER CLIENT ID" class="w-full input-box p-3 text-sm">
-                    <button class="w-full py-3 bg-teal-700 hover:bg-teal-600 rounded-xl font-bold text-xs tracking-widest transition-colors">LINK ACCOUNT</button>
+            <div class="velox-card p-5 space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-link text-yellow-400"></i>
+                    <p class="text-xs text-gray-300">Link <strong>Groww/Zerodha</strong> for Auto-Trade.</p>
                 </div>
-            </div>
-
-            <div class="space-y-2">
-                <h3 class="text-[10px] text-teal-500 uppercase font-bold ml-1">Preferences</h3>
-                <div class="velox-card p-4 space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-bold">Trade Notifications</span>
-                        <i class="fas fa-toggle-on text-green-400 text-2xl"></i>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-bold">Sound Effects</span>
-                        <i class="fas fa-toggle-on text-green-400 text-2xl"></i>
-                    </div>
-                </div>
+                <select class="w-full input-box p-3 bg-black/50 text-sm"><option>Zerodha (Kite)</option><option>Groww</option><option>Upstox</option></select>
+                <input type="password" placeholder="API KEY" class="w-full input-box p-3 text-sm">
+                <button class="w-full py-3 bg-teal-700 font-bold rounded-xl text-xs">LINK ACCOUNT</button>
             </div>
         </main>
 
         <nav class="fixed bottom-0 w-full bg-[#001f1f] border-t border-teal-800/50 pb-4 pt-2 px-4 flex justify-around z-40 shadow-2xl">
-            <button onclick="switchTab('home')" class="nav-btn active flex flex-col items-center text-yellow-400">
+            <button onclick="switchTab('home')" id="nav-home" class="nav-btn active text-yellow-400 flex flex-col items-center">
                 <i class="fas fa-home text-xl mb-1"></i><span class="text-[9px] font-bold">HOME</span>
             </button>
-            <button onclick="switchTab('portfolio')" class="nav-btn flex flex-col items-center text-gray-500">
+            <button onclick="switchTab('portfolio')" id="nav-portfolio" class="nav-btn text-gray-500 flex flex-col items-center">
                 <i class="fas fa-briefcase text-xl mb-1"></i><span class="text-[9px] font-bold">PORTFOLIO</span>
             </button>
-            <button onclick="switchTab('settings')" class="nav-btn flex flex-col items-center text-gray-500">
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn text-gray-500 flex flex-col items-center">
                 <i class="fas fa-cog text-xl mb-1"></i><span class="text-[9px] font-bold">SETTINGS</span>
             </button>
         </nav>
+    </div>
+
+    <div id="ai-popup-overlay" class="fixed inset-0 z-[100] bg-black/90 hidden backdrop-blur-md flex items-center justify-center p-4">
+        <div id="ai-popup-card" class="w-full max-w-sm velox-card border-2 border-yellow-400 bg-[#002b2b] overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
+            <div class="bg-yellow-400 p-3 flex justify-between items-center text-black">
+                <h3 class="font-black text-lg flex items-center gap-2"><i class="fas fa-bolt animate-pulse"></i> SURE SHOT CALL</h3>
+                <button onclick="closeAiPopup()" class="text-2xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-5 text-center">
+                <h2 id="ai-stock-name" class="text-3xl font-black text-white mb-1">RELIANCE</h2>
+                <div class="flex justify-center gap-2 mb-4">
+                    <span class="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">BUY CE</span>
+                    <span class="border border-yellow-400 text-yellow-400 text-[10px] font-bold px-2 py-0.5 rounded">98% ACCURACY</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4 bg-black/30 p-3 rounded-xl">
+                    <div class="text-left"><p class="text-[10px] text-gray-400 uppercase">LTP</p><p id="ai-ltp" class="text-xl font-bold text-green-400 blink-text">2450.00</p></div>
+                    <div class="text-right"><p class="text-[10px] text-gray-400 uppercase">TARGET</p><p id="ai-target" class="text-xl font-bold text-white">2480.00</p></div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeAiPopup()" class="flex-1 py-3 border border-gray-600 rounded-xl font-bold text-gray-400">IGNORE</button>
+                    <button onclick="confirmAiTrade()" class="flex-2 w-full py-3 bg-green-500 text-black rounded-xl font-black shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+                        <i class="fas fa-paper-plane mr-2"></i> BUY NOW
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="scripts/logic.js"></script>
