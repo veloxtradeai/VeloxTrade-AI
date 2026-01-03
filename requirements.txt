@@ -1,0 +1,9 @@
+flask
+flask-cors
+yfinance
+pandas
+pandas_ta
+flask-sqlalchemy
+flask-login
+flask-bcrypt
+gunicorn
