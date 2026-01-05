@@ -3,303 +3,389 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VeloxTrade Pro - Terminal</title>
-
+<title>VeloxTrade Pro Terminal</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
 <style>
-/* --- CORE THEME --- */
-:root{--teal-dark:#002b2b;--teal-light:#004d4d;--gold:#fbbf24;--gold-dark:#d97706;--danger:#ef4444;--success:#22c55e;}
-body{background:var(--teal-dark);color:#e0f2f1;font-family:'Rajdhani',sans-serif;padding-bottom:90px;overflow-x:hidden; -webkit-tap-highlight-color: transparent;}
+    :root { --bg: #050505; --panel: #0e0e0e; --border: #333; --accent: #ffd700; --green: #00ff88; --red: #ff3b3b; }
+    body { background-color: var(--bg); color: #e5e5e5; font-family: 'Rajdhani', sans-serif; overflow-x: hidden; }
+    
+    /* Terminal Effect */
+    .terminal-font { font-family: 'JetBrains Mono', monospace; }
+    .glass-panel { background: rgba(20, 20, 20, 0.9); border: 1px solid var(--border); backdrop-filter: blur(10px); }
+    
+    /* Navigation & Tabs */
+    .hidden-panel { display: none; }
+    .active-panel { display: block; animation: fadeIn 0.3s ease; }
+    
+    /* Custom Inputs */
+    .v-input { background: #000; border: 1px solid #333; color: white; width: 100%; padding: 12px; border-radius: 8px; outline: none; transition: 0.3s; }
+    .v-input:focus { border-color: var(--accent); }
+    
+    /* Buttons */
+    .btn-main { background: var(--accent); color: black; font-weight: 800; text-transform: uppercase; padding: 12px; border-radius: 8px; width: 100%; letter-spacing: 1px; }
+    .btn-main:active { transform: scale(0.98); }
 
-/* Glassmorphism Cards */
-.velox-card{background:rgba(0,0,0,.25);backdrop-filter:blur(12px);border:1px solid rgba(251,191,36,.15);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+    /* Scanner Pulse */
+    .scanner-active { border: 1px solid var(--accent); box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+    
+    /* Menus */
+    .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #222; cursor: pointer; }
+    .menu-item:active { background: #1a1a1a; }
+    .menu-sub { font-size: 12px; color: #666; }
 
-/* Buttons */
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#000;font-weight:800;text-transform:uppercase;transition:transform 0.2s;}
-.btn-gold:active{transform:scale(0.95);}
-
-/* Inputs */
-.input-box{background:rgba(0,0,0,.4);border:1px solid var(--teal-light);color:white;border-radius:12px;outline:none;transition:0.3s;}
-.input-box:focus{border-color:var(--gold);}
-
-/* Toggle Switch for Settings */
-.switch {position: relative; display: inline-block; width: 50px; height: 24px;}
-.switch input {opacity: 0; width: 0; height: 0;}
-.slider {position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px;}
-.slider:before {position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;}
-input:checked + .slider {background-color: var(--gold);}
-input:checked + .slider:before {transform: translateX(26px);}
-
-/* Animations */
-.sidebar{transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
-.sidebar-open{transform:translateX(0);}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:45;backdrop-filter:blur(3px);}
-.overlay-active{display:block;}
-
-.tab-panel{display:none; animation: fadeIn 0.3s ease-in-out;}
-.active-panel{display:block;}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* POPUP STYLES */
-.popup-container {position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;}
-.popup-active {transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: all;}
-.pulse-ring {position: absolute; width: 100%; height: 100%; border-radius: 16px; border: 2px solid var(--gold); animation: pulse-border 1.5s infinite;}
-@keyframes pulse-border {0% {transform: scale(1); opacity: 1;} 100% {transform: scale(1.1); opacity: 0;}}
-
-/* Live Dot */
-.live-dot {height: 8px; width: 8px; background-color: var(--danger); border-radius: 50%; display: inline-block; animation: blink 1s infinite;}
-@keyframes blink {0%{opacity:1;} 50%{opacity:0.4;} 100%{opacity:1;}}
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 
-<body class="select-none">
+<body class="antialiased">
 
-<audio id="alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-
-<div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
-
-<div id="auth-screen" class="fixed inset-0 z-[100] bg-[#001f1f] flex flex-col justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-  <div class="text-center mb-10">
-    <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl mb-4 animate-bounce">
-      <i class="fas fa-bolt text-4xl text-black"></i>
-    </div>
-    <h1 class="text-4xl font-black italic tracking-wider text-white">VELOX<span class="text-yellow-400">TRADE</span></h1>
-    <p class="text-teal-400 text-xs mt-2 tracking-[0.3em] font-bold">LIVE MARKET TERMINAL</p>
-  </div>
-
-  <div class="velox-card p-6">
-    <div class="flex bg-black/40 rounded-xl p-1 mb-6">
-      <button class="flex-1 py-3 rounded-lg font-bold bg-yellow-400 text-black">LOGIN</button>
-      <button class="flex-1 py-3 rounded-lg font-bold text-gray-400">REGISTER</button>
-    </div>
-    <input id="login-id" class="input-box w-full p-4 mb-3" placeholder="USER ID / EMAIL" value="demo_user">
-    <input id="login-pass" class="input-box w-full p-4 mb-4" type="password" placeholder="PASSWORD" value="123456">
-    <button onclick="handleLogin()" class="btn-gold w-full py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(251,191,36,0.4)]">ACCESS TERMINAL</button>
-  </div>
-</div>
-
-<div id="app-container" class="hidden">
-
-<header class="fixed top-0 w-full z-40 bg-[#002b2b]/95 backdrop-blur-md px-4 py-3 flex justify-between items-center border-b border-white/5 shadow-lg">
-  <div class="flex items-center gap-3" onclick="toggleSidebar()">
-    <div class="w-10 h-10 border-2 border-yellow-400 rounded-full p-0.5 relative cursor-pointer">
-      <img src="https://ui-avatars.com/api/?name=Velox+User&background=fbbf24&color=000" class="w-full h-full rounded-full">
-      <span id="market-indicator" class="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 border-2 border-black rounded-full"></span>
-    </div>
-    <div>
-      <h2 class="font-bold text-white leading-tight">Velox User</h2>
-      <p id="market-status-text" class="text-[9px] text-gray-400 font-bold tracking-widest uppercase">DISCONNECTED</p>
-    </div>
-  </div>
-  <div class="text-right">
-    <p class="text-[9px] text-gray-400 uppercase font-bold mb-0.5">Available Margin</p>
-    <div class="flex items-center justify-end gap-1">
-        <i class="fas fa-wallet text-yellow-500 text-xs"></i>
-        <p class="text-lg font-bold font-mono">₹50,000</p>
-    </div>
-  </div>
-</header>
-
-<div id="sidebar" class="sidebar fixed inset-y-0 left-0 w-[85%] bg-[#001f1f] z-50 border-r border-teal-800/50 overflow-y-auto">
-  <div class="p-6">
-    <div class="flex items-center gap-3 mb-6">
-        <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold text-xl">V</div>
-        <div>
-            <h2 class="text-xl font-black">Velox User</h2>
-            <p class="text-xs text-teal-400 font-bold tracking-wider">ID: 882910-VX</p>
+<div id="view-login" class="fixed inset-0 z-50 bg-black flex flex-col justify-center items-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+    <div class="w-full max-w-sm glass-panel p-8 rounded-2xl border-t-4 border-yellow-500 shadow-2xl">
+        <div class="text-center mb-8">
+            <i class="fas fa-bolt text-5xl text-yellow-500 mb-2"></i>
+            <h1 class="text-3xl font-black tracking-widest text-white">VELOX<span class="text-yellow-500">.AI</span></h1>
+            <p class="text-xs text-gray-500 tracking-[0.4em] mt-1">QUANTUM TRADING ENGINE</p>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs text-gray-400 font-bold ml-1">TRADER ID</label>
+                <input id="login-email" type="text" class="v-input terminal-font" placeholder="VX-USER-ID" value="admin@velox.ai">
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 font-bold ml-1">ACCESS KEY</label>
+                <input id="login-pass" type="password" class="v-input terminal-font" placeholder="••••••••" value="123456">
+            </div>
+            <button onclick="appLogin()" id="btn-login" class="btn-main mt-4 shadow-[0_0_20px_rgba(255,215,0,0.3)]">
+                INITIALIZE TERMINAL
+            </button>
+            <p id="login-msg" class="text-center text-red-500 text-xs h-4 mt-2"></p>
         </div>
     </div>
-    <hr class="border-white/10 mb-4">
-    
-    <div class="space-y-1">
-        <button onclick="switchTab('home'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-home w-6 text-yellow-400"></i> Home Dashboard</button>
-        <button onclick="switchTab('screener'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-radar w-6 text-yellow-400"></i> AI Screener</button>
-        <button onclick="switchTab('portfolio'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-chart-pie w-6 text-yellow-400"></i> Portfolio</button>
-        <button onclick="alert('Showing Orders...'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-list w-6 text-yellow-400"></i> Orders Book</button>
-        <button onclick="alert('Generating Report...'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-file-invoice-dollar w-6 text-yellow-400"></i> Reports & P&L</button>
-        <button onclick="alert('Transaction History'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-history w-6 text-yellow-400"></i> Transactions</button>
-        <button onclick="switchTab('settings'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-cog w-6 text-yellow-400"></i> All Settings</button>
-    </div>
-
-    <hr class="border-white/10 my-4">
-    <button onclick="logout()" class="w-full text-left p-3 rounded-lg bg-red-500/10 text-red-400 flex items-center gap-3"><i class="fas fa-sign-out-alt w-6"></i> Secure Logout</button>
-    
-    <div class="mt-8 text-center">
-        <p class="text-[10px] text-gray-500">VERSION 2.5.0 (STABLE)</p>
-        <p class="text-[10px] text-gray-600">Connected to Cloudflare Node: AP-SOUTH-1</p>
-    </div>
-  </div>
 </div>
 
-<main id="tab-home" class="tab-panel active-panel pt-24 px-4 pb-24 space-y-4">
-  <div class="velox-card p-4 border-l-4 border-yellow-400">
-    <div class="flex justify-between items-center">
-        <div>
-            <h3 class="font-bold text-gray-300 text-xs uppercase">System Status</h3>
-            <p id="system-status" class="text-green-400 font-bold text-lg"><i class="fas fa-check-circle"></i> AI ONLINE</p>
+<div id="view-app" class="hidden h-screen flex flex-col">
+    
+    <header class="h-16 bg-[#0a0a0a] border-b border-[#222] flex items-center justify-between px-4 sticky top-0 z-30">
+        <div class="flex items-center gap-3">
+            <div onclick="toggleMenu()" class="text-gray-300 text-xl cursor-pointer"><i class="fas fa-bars"></i></div>
+            <div>
+                <h2 class="text-yellow-500 font-bold leading-none tracking-wider">VELOX</h2>
+                <div class="flex items-center gap-1">
+                    <div id="conn-status" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] text-gray-400 font-mono">SYSTEM ONLINE</span>
+                </div>
+            </div>
         </div>
         <div class="text-right">
-            <h3 class="font-bold text-gray-300 text-xs uppercase">NIFTY 50</h3>
-            <p class="text-white font-mono font-bold text-lg">21,450.30</p>
+            <p class="text-[9px] text-gray-500 uppercase">Margin Available</p>
+            <p id="user-balance" class="text-lg font-mono font-bold text-white">₹0.00</p>
         </div>
-    </div>
-  </div>
+    </header>
 
-  <div>
-      <h3 class="text-gray-400 text-xs font-bold uppercase mb-2 pl-1">Market Movers</h3>
-      <div class="velox-card p-0 overflow-hidden">
-          <div class="flex justify-between p-3 border-b border-white/5 bg-white/5">
-              <span class="font-bold text-sm">Symbol</span>
-              <span class="font-bold text-sm">LTP</span>
-          </div>
-          <div class="p-3 flex justify-between border-b border-white/5">
-              <span class="text-green-400 font-bold">ADANIENT</span>
-              <span class="font-mono">2,450.00 <span class="text-[10px] text-green-400">(+2.4%)</span></span>
-          </div>
-          <div class="p-3 flex justify-between border-b border-white/5">
-              <span class="text-red-400 font-bold">HDFCBANK</span>
-              <span class="font-mono">1,640.00 <span class="text-[10px] text-red-400">(-1.2%)</span></span>
-          </div>
-      </div>
-  </div>
-</main>
-
-<main id="tab-screener" class="tab-panel pt-24 px-4 pb-24 space-y-4">
-  <div class="velox-card p-5 text-center">
-    <i class="fas fa-microchip text-4xl text-yellow-400 mb-3 animate-pulse"></i>
-    <h3 class="font-bold text-xl text-white">Velox AI Scanner</h3>
-    <p class="text-xs text-gray-400 mb-4">Scanning 500+ FnO Stocks for 80-90% Accuracy Setups</p>
-    
-    <div id="scan-animation" class="hidden my-4">
-        <div class="h-1 w-full bg-gray-700 rounded overflow-hidden">
-            <div class="h-full bg-yellow-400 animate-[width_2s_infinite]"></div>
-        </div>
-        <p class="text-[10px] text-yellow-400 mt-1">ANALYZING CANDLESTICK PATTERNS...</p>
-    </div>
-
-    <button onclick="startScanner()" id="btn-scan" class="btn-gold w-full py-3 rounded-xl shadow-lg">START LIVE SCAN</button>
-  </div>
-  
-  <div id="screener-results-area" class="space-y-2 hidden">
-      <h3 class="text-xs font-bold text-gray-400">RECENT DETECTIONS</h3>
-      </div>
-</main>
-
-<main id="tab-settings" class="tab-panel pt-24 px-4 pb-24 space-y-4">
-  
-  <div class="velox-card overflow-hidden">
-    <div class="bg-gradient-to-r from-yellow-600 to-yellow-800 p-3">
-        <h3 class="font-bold text-black flex items-center gap-2"><i class="fas fa-crown"></i> PRO PLAN ACTIVE</h3>
-    </div>
-    <div class="p-4 space-y-3">
-        <div class="flex justify-between text-sm">
-            <span class="text-gray-400">Valid Till</span>
-            <span class="font-mono">30 DEC 2026</span>
-        </div>
-        <button class="w-full py-2 bg-white/10 rounded border border-white/20 text-xs font-bold">MANAGE SUBSCRIPTION</button>
-        <button class="w-full py-2 bg-white/10 rounded border border-white/20 text-xs font-bold">PAYMENT METHODS</button>
-    </div>
-  </div>
-
-  <div class="velox-card p-4">
-      <h3 class="font-bold text-yellow-400 text-sm mb-4 border-b border-white/10 pb-2">AUTOMATION & BROKER</h3>
-      
-      <div class="flex justify-between items-center mb-4">
-          <div>
-              <p class="font-bold text-sm">Auto-Execute Trades</p>
-              <p class="text-[10px] text-gray-400">Automatically place orders on signal</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox">
-            <span class="slider"></span>
-          </label>
-      </div>
-
-      <div class="flex justify-between items-center mb-4">
-        <div>
-            <p class="font-bold text-sm">Connect Broker</p>
-            <p class="text-[10px] text-gray-400">Zerodha / Upstox / Angel</p>
-        </div>
-        <button class="bg-blue-600 px-3 py-1 rounded text-xs font-bold">LINK</button>
-    </div>
-  </div>
-
-  <div class="velox-card p-4">
-      <h3 class="font-bold text-yellow-400 text-sm mb-4 border-b border-white/10 pb-2">GENERAL SETTINGS</h3>
-      
-      <div class="space-y-4">
-          <div class="flex justify-between items-center">
-             <span class="text-sm"><i class="fas fa-bell w-6 text-gray-400"></i> Notifications</span>
-             <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm"><i class="fas fa-volume-up w-6 text-gray-400"></i> Sound Alerts</span>
-            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-         </div>
-         <div class="flex justify-between items-center">
-            <span class="text-sm"><i class="fas fa-palette w-6 text-gray-400"></i> Display / Theme</span>
-            <i class="fas fa-chevron-right text-xs text-gray-600"></i>
-         </div>
-         <div class="flex justify-between items-center" onclick="alert('Connecting to Support Chat...')">
-            <span class="text-sm"><i class="fas fa-headset w-6 text-gray-400"></i> Customer Support</span>
-            <i class="fas fa-chevron-right text-xs text-gray-600"></i>
-         </div>
-      </div>
-  </div>
-</main>
-
-<nav class="fixed bottom-0 w-full bg-[#001f1f] border-t border-teal-800/50 flex justify-around py-2 pb-5 z-40 backdrop-blur-md">
-  <button onclick="switchTab('home')" class="nav-btn active text-yellow-400 flex flex-col items-center p-2">
-      <i class="fas fa-home text-lg mb-1"></i>
-      <span class="text-[10px] font-bold">HOME</span>
-  </button>
-  <button onclick="switchTab('screener')" class="nav-btn text-gray-400 flex flex-col items-center p-2">
-      <i class="fas fa-radar text-lg mb-1"></i>
-      <span class="text-[10px] font-bold">SCANNER</span>
-  </button>
-  <button onclick="switchTab('settings')" class="nav-btn text-gray-400 flex flex-col items-center p-2">
-      <i class="fas fa-cog text-lg mb-1"></i>
-      <span class="text-[10px] font-bold">SETTINGS</span>
-  </button>
-</nav>
-
-<div id="trade-popup" class="popup-container velox-card w-[90%] max-w-sm bg-[#002b2b] border-2 border-yellow-400 shadow-[0_0_50px_rgba(251,191,36,0.5)]">
-    <div class="pulse-ring"></div>
-    <div class="bg-yellow-400 p-3 flex justify-between items-center rounded-t-xl">
-        <span class="text-black font-black flex items-center gap-2"><i class="fas fa-bolt"></i> SURE SHOT CALL</span>
-        <button onclick="closePopup()" class="text-black font-bold text-xl">&times;</button>
-    </div>
-    
-    <div class="p-5 text-center">
-        <h2 id="popup-stock" class="text-3xl font-black text-white mb-2">BANKNIFTY</h2>
-        <div class="inline-block bg-green-500 text-black font-bold px-3 py-1 rounded mb-4 animate-bounce">BUY CALL (CE)</div>
+    <div class="flex-1 overflow-y-auto pb-24 bg-[#050505] relative">
         
-        <div class="grid grid-cols-3 gap-2 text-sm mb-6 bg-black/30 p-3 rounded-lg">
-            <div>
-                <p class="text-gray-400 text-[10px]">ENTRY</p>
-                <p id="popup-entry" class="font-bold text-white">450.00</p>
+        <div id="tab-home" class="active-panel p-4 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass-panel p-3 rounded-xl border-l-2 border-green-500">
+                    <p class="text-[10px] text-gray-400">NIFTY 50</p>
+                    <p class="text-lg font-bold text-green-400">21,450.00</p>
+                    <p class="text-[10px] text-green-500">+120.50 (0.6%)</p>
+                </div>
+                <div class="glass-panel p-3 rounded-xl border-l-2 border-red-500">
+                    <p class="text-[10px] text-gray-400">BANKNIFTY</p>
+                    <p class="text-lg font-bold text-red-400">47,800.00</p>
+                    <p class="text-[10px] text-red-500">-80.20 (0.2%)</p>
+                </div>
             </div>
-            <div>
-                <p class="text-gray-400 text-[10px]">STOPLOSS</p>
-                <p id="popup-sl" class="font-bold text-red-400">420.00</p>
+
+            <div class="glass-panel p-6 rounded-xl text-center border border-yellow-500/20">
+                <div class="mb-4">
+                    <i class="fas fa-radar text-4xl text-yellow-500 mb-2"></i>
+                    <h3 class="text-xl font-bold text-white">AI OPPORTUNITY SCANNER</h3>
+                    <p class="text-xs text-gray-500">Connecting to: velox-backend.workers.dev</p>
+                </div>
+                <button onclick="runScanner()" id="btn-scan" class="btn-main relative overflow-hidden">
+                    <span class="relative z-10"><i class="fas fa-search"></i> SCAN MARKET (LIVE)</span>
+                </button>
             </div>
-            <div>
-                <p class="text-gray-400 text-[10px]">TARGET</p>
-                <p id="popup-tgt" class="font-bold text-green-400">510.00</p>
+
+            <div class="mt-6">
+                <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase">Recent Signals</h3>
+                <div id="signals-log" class="space-y-2">
+                    <div class="p-3 border border-[#222] rounded bg-[#0a0a0a] text-center text-gray-600 text-xs">
+                        No recent signals generated.
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="flex gap-3">
-            <button onclick="closePopup()" class="flex-1 py-3 rounded-lg bg-gray-700 font-bold text-gray-300">IGNORE</button>
-            <button onclick="alert('Order Placed Successfully via Broker API'); closePopup()" class="flex-1 py-3 rounded-lg bg-green-500 text-black font-black text-lg shadow-lg">BUY NOW</button>
+        <div id="tab-settings" class="hidden-panel p-0 bg-[#050505]">
+            <div class="bg-gray-900 p-4 mb-2">
+                <h2 class="text-xl font-bold">Settings & Configuration</h2>
+                <p class="text-xs text-gray-400">Build v3.2.1 (Production)</p>
+            </div>
+
+            <div class="mb-2">
+                <div class="px-4 py-2 bg-[#111] text-xs font-bold text-yellow-500">BILLING & PLANS</div>
+                <div class="menu-item">
+                    <div>Subscription Plan <div class="menu-sub">Pro Trader (Active)</div></div>
+                    <i class="fas fa-chevron-right text-gray-600"></i>
+                </div>
+                <div class="menu-item">
+                    <div>Payment Methods <div class="menu-sub">Manage Cards / UPI</div></div>
+                    <i class="fas fa-credit-card text-gray-600"></i>
+                </div>
+                <div class="menu-item">
+                    <div>Transaction History <div class="menu-sub">View Invoices</div></div>
+                    <i class="fas fa-history text-gray-600"></i>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <div class="px-4 py-2 bg-[#111] text-xs font-bold text-yellow-500">TRADING ENGINE</div>
+                <div class="menu-item">
+                    <div>Auto-Trade Mode <div class="menu-sub">Execute orders automatically</div></div>
+                    <i class="fas fa-toggle-off text-gray-500 text-xl"></i>
+                </div>
+                <div class="menu-item">
+                    <div>Broker Connection <div class="menu-sub text-red-400">Disconnected</div></div>
+                    <button class="px-3 py-1 bg-blue-600 text-[10px] rounded font-bold">LINK</button>
+                </div>
+                <div class="menu-item">
+                    <div>Order Settings <div class="menu-sub">Default Qty, SL buffer</div></div>
+                    <i class="fas fa-sliders-h text-gray-600"></i>
+                </div>
+            </div>
+
+             <div class="mb-2">
+                <div class="px-4 py-2 bg-[#111] text-xs font-bold text-yellow-500">APP PREFERENCES</div>
+                <div class="menu-item">
+                    <div>Display & Theme <div class="menu-sub">Dark / Terminal</div></div>
+                    <i class="fas fa-palette text-gray-600"></i>
+                </div>
+                <div class="menu-item">
+                    <div>Sound & Alerts <div class="menu-sub">Voice / Ringtone</div></div>
+                    <i class="fas fa-volume-up text-gray-600"></i>
+                </div>
+                <div class="menu-item">
+                    <div>Support & Help <div class="menu-sub">Contact Developer</div></div>
+                    <i class="fas fa-headset text-gray-600"></i>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <button onclick="appLogout()" class="w-full py-3 border border-red-900 text-red-500 rounded font-bold bg-red-900/10">SECURE LOGOUT</button>
+            </div>
         </div>
-        <p class="text-[10px] text-gray-500 mt-3">Confidence: 92% • Algo: TrendFollower V2</p>
+
+    </div>
+
+    <nav class="fixed bottom-0 w-full h-16 bg-[#0a0a0a] border-t border-[#222] flex justify-around items-center z-40">
+        <button onclick="switchTab('home')" class="nav-btn active flex flex-col items-center text-yellow-500">
+            <i class="fas fa-home text-lg"></i>
+            <span class="text-[9px] font-bold mt-1">HOME</span>
+        </button>
+        <button onclick="switchTab('orders')" class="nav-btn flex flex-col items-center text-gray-500">
+            <i class="fas fa-list text-lg"></i>
+            <span class="text-[9px] font-bold mt-1">ORDERS</span>
+        </button>
+        <button onclick="switchTab('portfolio')" class="nav-btn flex flex-col items-center text-gray-500">
+            <i class="fas fa-briefcase text-lg"></i>
+            <span class="text-[9px] font-bold mt-1">PORTFOLIO</span>
+        </button>
+        <button onclick="switchTab('settings')" class="nav-btn flex flex-col items-center text-gray-500">
+            <i class="fas fa-cog text-lg"></i>
+            <span class="text-[9px] font-bold mt-1">SETTINGS</span>
+        </button>
+    </nav>
+</div>
+
+<div id="signal-popup" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+    <div class="bg-[#111] w-full max-w-sm border-2 border-yellow-500 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(255,215,0,0.2)]">
+        <div class="bg-yellow-500 p-3 flex justify-between items-center text-black">
+            <div class="font-black text-lg flex items-center gap-2">
+                <i class="fas fa-bolt animate-pulse"></i> NEW SIGNAL
+            </div>
+            <button onclick="closePopup()" class="font-bold text-xl">&times;</button>
+        </div>
+        
+        <div class="p-6 text-center">
+            <h2 id="sig-symbol" class="text-3xl font-black text-white mb-1">LOADING...</h2>
+            <div id="sig-type" class="inline-block px-3 py-1 bg-gray-800 text-xs font-bold rounded mb-4">WAITING</div>
+            
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="bg-[#1a1a1a] p-2 rounded border border-[#333]">
+                    <div class="text-[9px] text-gray-500 uppercase">Entry</div>
+                    <div id="sig-entry" class="text-sm font-bold text-white">--</div>
+                </div>
+                <div class="bg-[#1a1a1a] p-2 rounded border border-[#333]">
+                    <div class="text-[9px] text-gray-500 uppercase">Stoploss</div>
+                    <div id="sig-sl" class="text-sm font-bold text-red-500">--</div>
+                </div>
+                <div class="bg-[#1a1a1a] p-2 rounded border border-[#333]">
+                    <div class="text-[9px] text-gray-500 uppercase">Target</div>
+                    <div id="sig-tgt" class="text-sm font-bold text-green-500">--</div>
+                </div>
+            </div>
+
+            <div class="text-left text-xs text-gray-400 mb-6 bg-[#050505] p-3 rounded">
+                <p><strong>LOGIC:</strong> <span id="sig-logic">Analyzing...</span></p>
+                <p><strong>CONFIDENCE:</strong> <span id="sig-conf" class="text-yellow-500">--</span></p>
+            </div>
+
+            <button onclick="executeTrade()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-black uppercase rounded shadow-lg transition">
+                EXECUTE ORDER NOW
+            </button>
+        </div>
     </div>
 </div>
 
-</div> <script src="scripts/logic.js"></script>
+<script>
+// --- CONFIGURATION ---
+const BACKEND_URL = "https://velox-backend.velox-trade-ai.workers.dev"; // Real Backend URL
+
+// --- AUTHENTICATION ---
+async function appLogin() {
+    const btn = document.getElementById('btn-login');
+    const msg = document.getElementById('login-msg');
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-pass').value;
+
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> AUTHENTICATING...';
+    msg.innerText = "";
+
+    try {
+        // REAL API CALL TO YOUR WORKER
+        const response = await fetch(`${BACKEND_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pass })
+        });
+        
+        const data = await response.json();
+
+        if (data.status === "SUCCESS") {
+            document.getElementById('view-login').style.display = 'none';
+            document.getElementById('view-app').classList.remove('hidden');
+            document.getElementById('user-balance').innerText = `₹${data.user.balance.toLocaleString()}`;
+        } else {
+            msg.innerText = data.message || "Login Failed";
+            btn.innerHTML = 'INITIALIZE TERMINAL';
+        }
+    } catch (error) {
+        console.error(error);
+        msg.innerText = "Server Connection Error";
+        btn.innerHTML = 'RETRY CONNECTION';
+    }
+}
+
+function appLogout() {
+    if(confirm("Terminate Session?")) location.reload();
+}
+
+// --- SCANNER LOGIC (CONNECTED TO BACKEND) ---
+async function runScanner() {
+    const btn = document.getElementById('btn-scan');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> SCANNING EXCHANGES...';
+    btn.classList.add('scanner-active');
+
+    try {
+        // CALLING YOUR CLOUDFLARE WORKER
+        const response = await fetch(`${BACKEND_URL}/signals`);
+        const data = await response.json();
+
+        // Remove loading state
+        btn.innerHTML = originalText;
+        btn.classList.remove('scanner-active');
+
+        if (data.status === "SIGNAL_FOUND") {
+            // Populate Popup with REAL Data from Backend
+            document.getElementById('sig-symbol').innerText = data.symbol;
+            document.getElementById('sig-type').innerText = data.type + " SIGNAL";
+            document.getElementById('sig-type').className = data.type === "BUY" 
+                ? "inline-block px-3 py-1 bg-green-500 text-black text-xs font-bold rounded mb-4"
+                : "inline-block px-3 py-1 bg-red-500 text-black text-xs font-bold rounded mb-4";
+                
+            document.getElementById('sig-entry').innerText = data.entry;
+            document.getElementById('sig-sl').innerText = data.stoploss;
+            document.getElementById('sig-tgt').innerText = data.targets[0];
+            document.getElementById('sig-logic').innerText = data.logic.join(", ");
+            document.getElementById('sig-conf').innerText = data.confidence;
+
+            // Play Sound
+            playAlertSound();
+            
+            // Show Popup
+            document.getElementById('signal-popup').classList.remove('hidden');
+        } else if (data.status === "MARKET_CLOSED") {
+            alert("MARKET STATUS: CLOSED. Please try between 09:15 and 15:30 IST.");
+        } else {
+            alert(data.message || "No setup found. Try again.");
+        }
+
+    } catch (error) {
+        console.error(error);
+        btn.innerHTML = originalText;
+        alert("Connection to Velox Cloud Failed.");
+    }
+}
+
+function closePopup() {
+    document.getElementById('signal-popup').classList.add('hidden');
+}
+
+function executeTrade() {
+    alert("ORDER SENT TO BROKER API\nStatus: Pending Execution");
+    closePopup();
+}
+
+// --- UTILS ---
+function switchTab(tabId) {
+    document.querySelectorAll('.active-panel').forEach(el => {
+        el.classList.remove('active-panel');
+        el.classList.add('hidden-panel');
+    });
+    
+    const target = document.getElementById('tab-' + tabId);
+    if(target) {
+        target.classList.remove('hidden-panel');
+        target.classList.add('active-panel');
+    }
+
+    // Update Bottom Nav Color
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('text-yellow-500', 'text-gray-500')); // reset
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.add('text-gray-500')); // dim all
+    
+    // Highlight current (Simple logic for demo)
+    // In production, match ID to button
+    event.currentTarget.classList.remove('text-gray-500');
+    event.currentTarget.classList.add('text-yellow-500');
+}
+
+function playAlertSound() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+    oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
+    
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.5);
+}
+</script>
 </body>
 </html>
