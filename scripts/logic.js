@@ -1,56 +1,116 @@
-// ===== FINAL STABLE LOGIC =====
+// Location: scripts/logic.js
 
+// 1. LOGIN SYSTEM
 function handleLogin() {
-  document.getElementById("auth-screen").classList.add("hidden");
-  document.getElementById("app-container").classList.remove("hidden");
-  updateMarketStatus();
+    const id = document.getElementById('login-id').value;
+    const pass = document.getElementById('login-pass').value;
+
+    if(id && pass) {
+        // Animation effect
+        const btn = document.querySelector('.btn-gold');
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> CONNECTING...';
+        
+        setTimeout(() => {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            initializeMarket(); // Start the fake market connection
+        }, 1500);
+    } else {
+        alert("Please enter User ID and Password");
+    }
 }
 
-function logout() {
-  location.reload();
+// 2. NAVIGATION SYSTEM
+function switchTab(tabName) {
+    // Hide all panels
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active-panel');
+    });
+    
+    // Show selected
+    document.getElementById('tab-' + tabName).classList.add('active-panel');
+
+    // Update Bottom Nav Styling
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-yellow-400');
+        btn.classList.add('text-gray-400');
+    });
+    // Highlight active logic would go here based on clicked element, 
+    // but for simplicity handled by inline onclicks updating styles in real app frameworks.
 }
 
 function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("sidebar-open");
-  document.getElementById("overlay").classList.toggle("overlay-active");
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    
+    if (sidebar.classList.contains('sidebar-open')) {
+        sidebar.classList.remove('sidebar-open');
+        overlay.classList.remove('overlay-active');
+    } else {
+        sidebar.classList.add('sidebar-open');
+        overlay.classList.add('overlay-active');
+    }
 }
 
-function switchTab(tab) {
-  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active-panel"));
-  const t = document.getElementById("tab-" + tab);
-  if (t) t.classList.add("active-panel");
-  document.getElementById("sidebar").classList.remove("sidebar-open");
-  document.getElementById("overlay").classList.remove("overlay-active");
+function logout() {
+    if(confirm("Are you sure you want to logout?")) {
+        location.reload();
+    }
 }
 
-function isMarketLive() {
-  const d = new Date();
-  const h = d.getHours(), m = d.getMinutes();
-  return (h > 9 || (h === 9 && m >= 15)) && (h < 15 || (h === 15 && m <= 30));
+// 3. SCREENER & POPUP LOGIC
+function startScanner() {
+    const btn = document.getElementById('btn-scan');
+    const anim = document.getElementById('scan-animation');
+    
+    btn.classList.add('hidden');
+    anim.classList.remove('hidden');
+
+    // Simulate finding a trade after 3 seconds
+    setTimeout(() => {
+        triggerPopup("TATASTEEL", "145.50", "142.00", "152.00");
+        
+        // Reset Scanner button
+        btn.classList.remove('hidden');
+        anim.classList.add('hidden');
+        btn.innerText = "RE-SCAN MARKET";
+    }, 3000);
 }
 
-function updateMarketStatus() {
-  const live = isMarketLive();
-  const txt = document.getElementById("market-status-text");
-  const dot = document.getElementById("status-dot");
-  const ai = document.getElementById("ai-status-text");
+function triggerPopup(stock, entry, sl, tgt) {
+    // 1. Set Data
+    document.getElementById('popup-stock').innerText = stock;
+    document.getElementById('popup-entry').innerText = entry;
+    document.getElementById('popup-sl').innerText = sl;
+    document.getElementById('popup-tgt').innerText = tgt;
 
-  txt.innerText = live ? "MARKET LIVE" : "MARKET CLOSED";
-  txt.className = live
-    ? "text-[9px] text-green-400 font-bold tracking-widest uppercase"
-    : "text-[9px] text-red-400 font-bold tracking-widest uppercase";
+    // 2. Play Sound
+    const audio = document.getElementById('alert-sound');
+    audio.play().catch(e => console.log("Audio permission needed"));
 
-  dot.className = "absolute bottom-0 right-0 w-3 h-3 border-2 border-black rounded-full " + (live ? "bg-green-500" : "bg-red-500");
-  if (ai) ai.innerText = live ? "Market live. Scanner enabled." : "Market closed. Scanner paused.";
+    // 3. Show Popup
+    document.getElementById('trade-popup').classList.add('popup-active');
+
+    // 4. Vibration (Mobile only)
+    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
 }
 
-function runScreener() {
-  if (!isMarketLive()) {
-    document.getElementById("screener-results").innerText = "Market closed.";
-    return;
-  }
-  document.getElementById("screener-results").innerText = "Scanning... (backend will plug here)";
+function closePopup() {
+    document.getElementById('trade-popup').classList.remove('popup-active');
 }
 
-// keep status fresh
-setInterval(updateMarketStatus, 60000);
+// 4. MARKET STATUS SIMULATION
+function initializeMarket() {
+    const statusText = document.getElementById('market-status-text');
+    const indicator = document.getElementById('market-indicator');
+    
+    setTimeout(() => {
+        statusText.innerText = "MARKET LIVE";
+        statusText.classList.remove('text-gray-400');
+        statusText.classList.add('text-green-400');
+        
+        indicator.classList.remove('bg-gray-500');
+        indicator.classList.add('bg-green-500');
+        indicator.classList.add('live-dot'); // Blinking effect
+    }, 2000);
+}
