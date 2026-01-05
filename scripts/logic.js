@@ -1,193 +1,211 @@
 /* =========================================================
-   VELOXTRADE PRO – FINAL UI & FLOW LOGIC
-   Compatible with your original index.html
-   NO FAKE POPUPS | NO RANDOM DATA
+   VELOXTRADE PRO - FINAL LOGIC.JS
+   Works with FINAL index.html (UI-only)
    ========================================================= */
 
-const BACKEND_URL = "https://velox-backend.velox-trade-ai.workers.dev";
+const BACKEND = "https://velox-backend.velox-trade-ai.workers.dev";
 
-/* ------------------ APP STATE ------------------ */
-const AppState = {
-  loggedIn: false,
-  activeTab: "home",
-  marketLive: false,
-  scannerRunning: false,
-  popupVisible: false,
-};
+let currentTab = "home";
+let selectedBroker = null;
+let autoScanner = null;
 
-/* ------------------ INIT ------------------ */
-document.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem("isLoggedIn") === "true") {
-    showApp();
-  }
-});
+/* ================= BASIC ================= */
 
-/* ------------------ AUTH ------------------ */
-function switchAuth(type) {
-  document.getElementById("login-form").classList.toggle("hidden", type !== "login");
-  document.getElementById("signup-form").classList.toggle("hidden", type !== "signup");
-
-  document.getElementById("tab-login").classList.toggle("bg-yellow-400", type === "login");
-  document.getElementById("tab-signup").classList.toggle("bg-yellow-400", type === "signup");
+function $(id) {
+  return document.getElementById(id);
 }
 
-async function handleLogin() {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-pass").value;
+/* ================= AUTH ================= */
 
-  try {
-    const res = await fetch(`${BACKEND_URL}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) throw new Error("Login failed");
-
-    localStorage.setItem("isLoggedIn", "true");
-    showApp();
-  } catch (e) {
-    alert("Login failed. Backend not reachable or invalid credentials.");
-  }
+function handleLogin() {
+  $("auth-screen").classList.add("hidden");
+  $("app-container").classList.remove("hidden");
+  updateMarketStatus();
+  startAutoScanner();
 }
 
-function showApp() {
-  AppState.loggedIn = true;
-  document.getElementById("auth-screen").classList.add("hidden");
-  document.getElementById("app-container").classList.remove("hidden");
-  checkMarketStatus();
+function logout() {
+  location.reload();
 }
 
-/* ------------------ SIDEBAR ------------------ */
+/* ================= SIDEBAR ================= */
+
 function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("sidebar-open");
-  document.getElementById("overlay").classList.toggle("overlay-active");
+  $("sidebar").classList.toggle("sidebar-open");
+  $("overlay").classList.toggle("overlay-active");
 }
 
-/* ------------------ TABS ------------------ */
-function switchTab(tab) {
-  AppState.activeTab = tab;
+/* ================= TABS ================= */
 
+function switchTab(tab) {
   document.querySelectorAll(".tab-panel").forEach(p => {
     p.classList.remove("active-panel");
-    p.style.display = "none";
   });
 
-  const panel = document.getElementById(`tab-${tab}`);
-  panel.style.display = "block";
-  setTimeout(() => panel.classList.add("active-panel"), 10);
+  const target = document.querySelector(`main.tab-panel[data-tab="${tab}"]`) ||
+                 document.querySelector(`main.tab-panel`);
 
-  document.querySelectorAll(".nav-btn").forEach(b => {
-    b.classList.remove("text-yellow-400");
-    b.classList.add("text-gray-500");
-  });
-
-  const btn = document.getElementById(`btn-${tab}`);
-  if (btn) {
-    btn.classList.add("text-yellow-400");
-    btn.classList.remove("text-gray-500");
+  if ($("tab-" + tab)) {
+    $("tab-" + tab).classList.add("active-panel");
   }
+
+  currentTab = tab;
+  closeSidebar();
 }
 
-/* ------------------ MARKET STATUS ------------------ */
-function checkMarketStatus() {
+function closeSidebar() {
+  $("sidebar").classList.remove("sidebar-open");
+  $("overlay").classList.remove("overlay-active");
+}
+
+/* ================= MARKET TIME ================= */
+
+function isMarketLive() {
   const now = new Date();
   const h = now.getHours();
   const m = now.getMinutes();
+  return (h > 9 || (h === 9 && m >= 15)) &&
+         (h < 15 || (h === 15 && m <= 30));
+}
 
-  AppState.marketLive =
-    (h > 9 || (h === 9 && m >= 15)) &&
-    (h < 15 || (h === 15 && m <= 30));
+function updateMarketStatus() {
+  const live = isMarketLive();
 
-  if (AppState.marketLive) {
-    setMarketLive();
-  } else {
-    setMarketClosed();
+  const statusText = document.querySelector("header p");
+  if (statusText) {
+    statusText.innerText = live ? "MARKET LIVE" : "MARKET CLOSED";
+    statusText.className = live
+      ? "text-[9px] text-green-400 font-bold tracking-widest uppercase"
+      : "text-[9px] text-red-400 font-bold tracking-widest uppercase";
+  }
+
+  const aiText = document.querySelector("main .velox-card p");
+  if (aiText) {
+    aiText.innerText = live
+      ? "Market live. AI scanning enabled."
+      : "Market closed. Scanner paused.";
   }
 }
 
-function setMarketLive() {
-  document.getElementById("market-status-text").innerText = "MARKET LIVE";
-  document.getElementById("market-status-text").className =
-    "text-[9px] text-green-400 font-bold tracking-widest uppercase";
+/* ================= BROKER ================= */
 
-  document.getElementById("ai-status-text").innerText =
-    "Market live. Waiting for backend signals...";
-
-  startScanner();
+function setBroker(broker) {
+  selectedBroker = broker;
+  alert("Broker selected: " + broker.toUpperCase());
 }
 
-function setMarketClosed() {
-  document.getElementById("market-status-text").innerText = "MARKET CLOSED";
-  document.getElementById("ai-status-text").innerText =
-    "Market closed. Scanner paused.";
+/* ================= SCREENER ================= */
 
-  stopScanner();
-}
+async function runScreener() {
+  if (!isMarketLive()) {
+    alert("Market closed. Screener disabled.");
+    return;
+  }
 
-/* ------------------ SCANNER ------------------ */
-function startScanner() {
-  if (AppState.scannerRunning) return;
-  AppState.scannerRunning = true;
+  const box = $("screener-results");
+  if (!box) return;
 
-  scanLoop();
-}
+  box.innerText = "Scanning market…";
 
-function stopScanner() {
-  AppState.scannerRunning = false;
-}
+  try {
+    const res = await fetch(BACKEND + "/screener", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        broker: selectedBroker || "default"
+      })
+    });
 
-async function scanLoop() {
-  while (AppState.marketLive && AppState.scannerRunning) {
-    try {
-      const res = await fetch(`${BACKEND_URL}/signals`);
-      if (!res.ok) throw new Error();
+    const data = await res.json();
 
-      const data = await res.json();
-
-      if (data && data.signal && !AppState.popupVisible) {
-        triggerPopup(data.symbol, data.price);
-      }
-    } catch (e) {
-      console.log("Scanner idle – no valid signal");
+    if (!Array.isArray(data) || data.length === 0) {
+      box.innerText = "No high probability setup found.";
+      return;
     }
 
-    await new Promise(r => setTimeout(r, 10000));
+    box.innerHTML = "";
+    data.forEach(stock => {
+      const d = document.createElement("div");
+      d.className = "bg-black/30 p-3 rounded-xl border border-white/5";
+      d.innerHTML = `
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="font-bold text-white">${stock.symbol}</div>
+            <div class="text-xs text-gray-400">
+              Entry ${stock.entry} | SL ${stock.sl} | TGT ${stock.target}
+            </div>
+          </div>
+          <div class="text-green-400 font-bold">${stock.confidence}%</div>
+        </div>
+      `;
+      box.appendChild(d);
+    });
+
+  } catch (e) {
+    console.error(e);
+    box.innerText = "Backend not reachable.";
   }
 }
 
-/* ------------------ POPUP ------------------ */
-function triggerPopup(stock, price) {
-  if (!AppState.marketLive) return;
+/* ================= AUTO AI SCANNER ================= */
 
-  AppState.popupVisible = true;
-  document.getElementById("popup-stock").innerText = stock;
-  document.getElementById("popup-price").innerText = `₹${price}`;
+function startAutoScanner() {
+  if (!isMarketLive()) return;
 
-  const popup = document.getElementById("ai-popup-container");
-  popup.classList.remove("popup-hidden");
-  popup.classList.add("popup-visible");
+  stopAutoScanner();
+
+  autoScanner = setInterval(async () => {
+    try {
+      const res = await fetch(
+        BACKEND + "/signal?broker=" + (selectedBroker || "default")
+      );
+      const data = await res.json();
+
+      if (data && data.symbol) {
+        showPopup(data);
+      }
+    } catch (e) {
+      console.warn("Waiting for AI signal");
+    }
+  }, 15000);
+}
+
+function stopAutoScanner() {
+  if (autoScanner) {
+    clearInterval(autoScanner);
+    autoScanner = null;
+  }
+}
+
+/* ================= POPUP ================= */
+
+function showPopup(signal) {
+  $("popup-stock").innerText = signal.symbol;
+  $("popup-price").innerText = "₹" + signal.entry;
+  $("ai-popup-container").classList.remove("popup-hidden");
+  $("ai-popup-container").classList.add("popup-visible");
+  playSound();
 }
 
 function closePopup() {
-  AppState.popupVisible = false;
-  const popup = document.getElementById("ai-popup-container");
-  popup.classList.remove("popup-visible");
-  popup.classList.add("popup-hidden");
+  $("ai-popup-container").classList.remove("popup-visible");
+  $("ai-popup-container").classList.add("popup-hidden");
 }
 
-/* ------------------ BROKER CONNECT (FLOW ONLY) ------------------ */
-document.addEventListener("click", e => {
-  if (e.target.innerText?.includes("Groww")) {
-    window.open("https://groww.in", "_blank");
-  }
-  if (e.target.innerText?.includes("Zerodha")) {
-    window.open("https://zerodha.com", "_blank");
-  }
-  if (e.target.innerText?.includes("Upstox")) {
-    window.open("https://upstox.com", "_blank");
-  }
-  if (e.target.innerText?.includes("Angel")) {
-    window.open("https://angelone.in", "_blank");
-  }
-});
+function executeOrder() {
+  alert("Redirecting to broker app for order execution.");
+  closePopup();
+}
+
+/* ================= SOUND ================= */
+
+function playSound() {
+  const audio = new Audio(
+    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+  );
+  audio.play().catch(() => {});
+}
+
+/* ================= INIT ================= */
+
+setInterval(updateMarketStatus, 60000);
