@@ -1,12 +1,4 @@
-const API = "https://YOUR-WORKER-URL"; // ← yahan apna worker URL
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem("logged") === "1") {
-    showApp();
-  }
-});
-
-/* ================= AUTH ================= */
+const API = "https://<YOUR-WORKER>.workers.dev";
 
 function handleLogin() {
   const email = document.getElementById("login-email").value;
@@ -19,58 +11,23 @@ function handleLogin() {
   })
     .then(r => r.json())
     .then(d => {
-      if (d.status !== "OK") {
+      if (d.status === "OK") {
+        document.getElementById("auth-screen").classList.add("hidden");
+        document.getElementById("app-container").classList.remove("hidden");
+        startSignals();
+      } else {
         alert("Login failed");
-        return;
       }
-      localStorage.setItem("logged", "1");
-      showApp();
     })
-    .catch(() => alert("Server error"));
+    .catch(() => alert("Server not reachable"));
 }
 
-function showApp() {
-  document.getElementById("auth-screen").classList.add("hidden");
-  document.getElementById("app-container").classList.remove("hidden");
-  startSignalWatcher();
-}
-
-/* ================= SIGNAL WATCHER ================= */
-
-function startSignalWatcher() {
+function startSignals() {
   setInterval(async () => {
-    const res = await fetch(API + "/signals");
-    const data = await res.json();
-
-    if (data.status === "SIGNAL") {
-      openSignalPopup(data);
+    const r = await fetch(API + "/signals");
+    const d = await r.json();
+    if (d.status === "SIGNAL") {
+      alert("SIGNAL: " + d.symbol + " BUY");
     }
   }, 5000);
-}
-
-/* ================= POPUP ================= */
-
-function openSignalPopup(s) {
-  document.getElementById("popup-stock").innerText = s.symbol;
-  document.getElementById("popup-price").innerText = "₹" + s.entry;
-  window.currentSignal = s;
-
-  const p = document.getElementById("ai-popup-container");
-  p.classList.remove("popup-hidden");
-  p.classList.add("popup-visible");
-}
-
-function closePopup() {
-  const p = document.getElementById("ai-popup-container");
-  p.classList.remove("popup-visible");
-  p.classList.add("popup-hidden");
-}
-
-/* ================= BUY ================= */
-
-function executeOrder() {
-  const s = window.currentSignal;
-  // Broker redirect (Groww example)
-  const url = `https://groww.in/stocks/${s.symbol}`;
-  window.open(url, "_blank");
 }
