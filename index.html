@@ -3,34 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VeloxTrade Pro</title>
+<title>VeloxTrade Pro - Terminal</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-:root{--teal-dark:#002b2b;--teal-light:#004d4d;--gold:#fbbf24;--gold-dark:#d97706;}
-body{background:var(--teal-dark);color:#e0f2f1;font-family:'Rajdhani',sans-serif;padding-bottom:90px;overflow-x:hidden}
-.velox-card{background:rgba(0,0,0,.25);backdrop-filter:blur(12px);border:1px solid rgba(251,191,36,.15);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#000;font-weight:800;text-transform:uppercase}
-.input-box{background:rgba(0,0,0,.4);border:1px solid var(--teal-light);color:white;border-radius:12px}
-.sidebar{transform:translateX(-100%);transition:.3s}
-.sidebar-open{transform:translateX(0)}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:45}
-.overlay-active{display:block}
-.tab-panel{display:none}
-.active-panel{display:block}
-.popup-hidden{transform:translateY(100%);opacity:0;pointer-events:none}
-.popup-visible{transform:translateY(0);opacity:1}
+/* --- CORE THEME --- */
+:root{--teal-dark:#002b2b;--teal-light:#004d4d;--gold:#fbbf24;--gold-dark:#d97706;--danger:#ef4444;--success:#22c55e;}
+body{background:var(--teal-dark);color:#e0f2f1;font-family:'Rajdhani',sans-serif;padding-bottom:90px;overflow-x:hidden; -webkit-tap-highlight-color: transparent;}
+
+/* Glassmorphism Cards */
+.velox-card{background:rgba(0,0,0,.25);backdrop-filter:blur(12px);border:1px solid rgba(251,191,36,.15);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+
+/* Buttons */
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#000;font-weight:800;text-transform:uppercase;transition:transform 0.2s;}
+.btn-gold:active{transform:scale(0.95);}
+
+/* Inputs */
+.input-box{background:rgba(0,0,0,.4);border:1px solid var(--teal-light);color:white;border-radius:12px;outline:none;transition:0.3s;}
+.input-box:focus{border-color:var(--gold);}
+
+/* Toggle Switch for Settings */
+.switch {position: relative; display: inline-block; width: 50px; height: 24px;}
+.switch input {opacity: 0; width: 0; height: 0;}
+.slider {position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px;}
+.slider:before {position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;}
+input:checked + .slider {background-color: var(--gold);}
+input:checked + .slider:before {transform: translateX(26px);}
+
+/* Animations */
+.sidebar{transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
+.sidebar-open{transform:translateX(0);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:45;backdrop-filter:blur(3px);}
+.overlay-active{display:block;}
+
+.tab-panel{display:none; animation: fadeIn 0.3s ease-in-out;}
+.active-panel{display:block;}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* POPUP STYLES */
+.popup-container {position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;}
+.popup-active {transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: all;}
+.pulse-ring {position: absolute; width: 100%; height: 100%; border-radius: 16px; border: 2px solid var(--gold); animation: pulse-border 1.5s infinite;}
+@keyframes pulse-border {0% {transform: scale(1); opacity: 1;} 100% {transform: scale(1.1); opacity: 0;}}
+
+/* Live Dot */
+.live-dot {height: 8px; width: 8px; background-color: var(--danger); border-radius: 50%; display: inline-block; animation: blink 1s infinite;}
+@keyframes blink {0%{opacity:1;} 50%{opacity:0.4;} 100%{opacity:1;}}
 </style>
 </head>
 
 <body class="select-none">
 
+<audio id="alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
 <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
 
-<!-- AUTH -->
 <div id="auth-screen" class="fixed inset-0 z-[100] bg-[#001f1f] flex flex-col justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
   <div class="text-center mb-10">
     <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl mx-auto flex items-center justify-center shadow-2xl mb-4 animate-bounce">
@@ -45,84 +75,231 @@ body{background:var(--teal-dark);color:#e0f2f1;font-family:'Rajdhani',sans-serif
       <button class="flex-1 py-3 rounded-lg font-bold bg-yellow-400 text-black">LOGIN</button>
       <button class="flex-1 py-3 rounded-lg font-bold text-gray-400">REGISTER</button>
     </div>
-    <input class="input-box w-full p-4 mb-3" placeholder="USER ID / EMAIL">
-    <input class="input-box w-full p-4 mb-4" type="password" placeholder="PASSWORD">
-    <button onclick="handleLogin()" class="btn-gold w-full py-4 rounded-xl text-lg">ACCESS TERMINAL</button>
+    <input id="login-id" class="input-box w-full p-4 mb-3" placeholder="USER ID / EMAIL" value="demo_user">
+    <input id="login-pass" class="input-box w-full p-4 mb-4" type="password" placeholder="PASSWORD" value="123456">
+    <button onclick="handleLogin()" class="btn-gold w-full py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(251,191,36,0.4)]">ACCESS TERMINAL</button>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app-container" class="hidden">
 
-<header class="fixed top-0 w-full z-40 bg-[#002b2b]/95 backdrop-blur-md px-4 py-3 flex justify-between items-center border-b border-white/5">
+<header class="fixed top-0 w-full z-40 bg-[#002b2b]/95 backdrop-blur-md px-4 py-3 flex justify-between items-center border-b border-white/5 shadow-lg">
   <div class="flex items-center gap-3" onclick="toggleSidebar()">
-    <div class="w-10 h-10 border-2 border-yellow-400 rounded-full p-0.5 relative">
-      <img src="https://ui-avatars.com/api/?name=User&background=fbbf24&color=000" class="w-full h-full rounded-full">
-      <span id="status-dot" class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 border-2 border-black rounded-full"></span>
+    <div class="w-10 h-10 border-2 border-yellow-400 rounded-full p-0.5 relative cursor-pointer">
+      <img src="https://ui-avatars.com/api/?name=Velox+User&background=fbbf24&color=000" class="w-full h-full rounded-full">
+      <span id="market-indicator" class="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 border-2 border-black rounded-full"></span>
     </div>
     <div>
-      <h2 class="font-bold text-white">Velox User</h2>
-      <p id="market-status-text" class="text-[9px] text-red-400 font-bold tracking-widest uppercase">MARKET CLOSED</p>
+      <h2 class="font-bold text-white leading-tight">Velox User</h2>
+      <p id="market-status-text" class="text-[9px] text-gray-400 font-bold tracking-widest uppercase">DISCONNECTED</p>
     </div>
   </div>
   <div class="text-right">
-    <p class="text-[9px] text-gray-400 uppercase font-bold">Live Balance</p>
-    <p class="text-lg font-bold">₹50,000</p>
+    <p class="text-[9px] text-gray-400 uppercase font-bold mb-0.5">Available Margin</p>
+    <div class="flex items-center justify-end gap-1">
+        <i class="fas fa-wallet text-yellow-500 text-xs"></i>
+        <p class="text-lg font-bold font-mono">₹50,000</p>
+    </div>
   </div>
 </header>
 
-<!-- SIDEBAR -->
 <div id="sidebar" class="sidebar fixed inset-y-0 left-0 w-[85%] bg-[#001f1f] z-50 border-r border-teal-800/50 overflow-y-auto">
-  <div class="p-6 space-y-3">
-    <div>
-      <h2 class="text-xl font-black">Velox User</h2>
-      <p class="text-xs text-teal-400 font-bold">+91 XXXXXXXX</p>
+  <div class="p-6">
+    <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold text-xl">V</div>
+        <div>
+            <h2 class="text-xl font-black">Velox User</h2>
+            <p class="text-xs text-teal-400 font-bold tracking-wider">ID: 882910-VX</p>
+        </div>
     </div>
-    <hr class="opacity-30">
-    <button onclick="switchTab('home')" class="w-full text-left">🏠 Home</button>
-    <button onclick="switchTab('screener')" class="w-full text-left">🧠 Screener</button>
-    <button onclick="switchTab('portfolio')" class="w-full text-left">📊 Portfolio</button>
-    <button onclick="switchTab('settings')" class="w-full text-left">⚙ Settings</button>
-    <hr class="opacity-30">
-    <button onclick="logout()" class="text-red-400 w-full text-left">Logout</button>
+    <hr class="border-white/10 mb-4">
+    
+    <div class="space-y-1">
+        <button onclick="switchTab('home'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-home w-6 text-yellow-400"></i> Home Dashboard</button>
+        <button onclick="switchTab('screener'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-radar w-6 text-yellow-400"></i> AI Screener</button>
+        <button onclick="switchTab('portfolio'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-chart-pie w-6 text-yellow-400"></i> Portfolio</button>
+        <button onclick="alert('Showing Orders...'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-list w-6 text-yellow-400"></i> Orders Book</button>
+        <button onclick="alert('Generating Report...'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-file-invoice-dollar w-6 text-yellow-400"></i> Reports & P&L</button>
+        <button onclick="alert('Transaction History'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-history w-6 text-yellow-400"></i> Transactions</button>
+        <button onclick="switchTab('settings'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3"><i class="fas fa-cog w-6 text-yellow-400"></i> All Settings</button>
+    </div>
+
+    <hr class="border-white/10 my-4">
+    <button onclick="logout()" class="w-full text-left p-3 rounded-lg bg-red-500/10 text-red-400 flex items-center gap-3"><i class="fas fa-sign-out-alt w-6"></i> Secure Logout</button>
+    
+    <div class="mt-8 text-center">
+        <p class="text-[10px] text-gray-500">VERSION 2.5.0 (STABLE)</p>
+        <p class="text-[10px] text-gray-600">Connected to Cloudflare Node: AP-SOUTH-1</p>
+    </div>
   </div>
 </div>
 
-<!-- HOME -->
 <main id="tab-home" class="tab-panel active-panel pt-24 px-4 pb-24 space-y-4">
-  <div class="velox-card p-4">
-    <h3 class="font-bold mb-1">AI Scanner Status</h3>
-    <p id="ai-status-text" class="text-sm text-gray-300">Market closed. Scanner paused.</p>
+  <div class="velox-card p-4 border-l-4 border-yellow-400">
+    <div class="flex justify-between items-center">
+        <div>
+            <h3 class="font-bold text-gray-300 text-xs uppercase">System Status</h3>
+            <p id="system-status" class="text-green-400 font-bold text-lg"><i class="fas fa-check-circle"></i> AI ONLINE</p>
+        </div>
+        <div class="text-right">
+            <h3 class="font-bold text-gray-300 text-xs uppercase">NIFTY 50</h3>
+            <p class="text-white font-mono font-bold text-lg">21,450.30</p>
+        </div>
+    </div>
+  </div>
+
+  <div>
+      <h3 class="text-gray-400 text-xs font-bold uppercase mb-2 pl-1">Market Movers</h3>
+      <div class="velox-card p-0 overflow-hidden">
+          <div class="flex justify-between p-3 border-b border-white/5 bg-white/5">
+              <span class="font-bold text-sm">Symbol</span>
+              <span class="font-bold text-sm">LTP</span>
+          </div>
+          <div class="p-3 flex justify-between border-b border-white/5">
+              <span class="text-green-400 font-bold">ADANIENT</span>
+              <span class="font-mono">2,450.00 <span class="text-[10px] text-green-400">(+2.4%)</span></span>
+          </div>
+          <div class="p-3 flex justify-between border-b border-white/5">
+              <span class="text-red-400 font-bold">HDFCBANK</span>
+              <span class="font-mono">1,640.00 <span class="text-[10px] text-red-400">(-1.2%)</span></span>
+          </div>
+      </div>
   </div>
 </main>
 
-<!-- SCREENER -->
 <main id="tab-screener" class="tab-panel pt-24 px-4 pb-24 space-y-4">
+  <div class="velox-card p-5 text-center">
+    <i class="fas fa-microchip text-4xl text-yellow-400 mb-3 animate-pulse"></i>
+    <h3 class="font-bold text-xl text-white">Velox AI Scanner</h3>
+    <p class="text-xs text-gray-400 mb-4">Scanning 500+ FnO Stocks for 80-90% Accuracy Setups</p>
+    
+    <div id="scan-animation" class="hidden my-4">
+        <div class="h-1 w-full bg-gray-700 rounded overflow-hidden">
+            <div class="h-full bg-yellow-400 animate-[width_2s_infinite]"></div>
+        </div>
+        <p class="text-[10px] text-yellow-400 mt-1">ANALYZING CANDLESTICK PATTERNS...</p>
+    </div>
+
+    <button onclick="startScanner()" id="btn-scan" class="btn-gold w-full py-3 rounded-xl shadow-lg">START LIVE SCAN</button>
+  </div>
+  
+  <div id="screener-results-area" class="space-y-2 hidden">
+      <h3 class="text-xs font-bold text-gray-400">RECENT DETECTIONS</h3>
+      </div>
+</main>
+
+<main id="tab-settings" class="tab-panel pt-24 px-4 pb-24 space-y-4">
+  
+  <div class="velox-card overflow-hidden">
+    <div class="bg-gradient-to-r from-yellow-600 to-yellow-800 p-3">
+        <h3 class="font-bold text-black flex items-center gap-2"><i class="fas fa-crown"></i> PRO PLAN ACTIVE</h3>
+    </div>
+    <div class="p-4 space-y-3">
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-400">Valid Till</span>
+            <span class="font-mono">30 DEC 2026</span>
+        </div>
+        <button class="w-full py-2 bg-white/10 rounded border border-white/20 text-xs font-bold">MANAGE SUBSCRIPTION</button>
+        <button class="w-full py-2 bg-white/10 rounded border border-white/20 text-xs font-bold">PAYMENT METHODS</button>
+    </div>
+  </div>
+
   <div class="velox-card p-4">
-    <h3 class="font-bold mb-2">AI Screener</h3>
-    <button onclick="runScreener()" class="btn-gold w-full py-3 rounded-xl">RUN SCREENER</button>
-    <div id="screener-results" class="mt-3 text-sm opacity-70">No results.</div>
+      <h3 class="font-bold text-yellow-400 text-sm mb-4 border-b border-white/10 pb-2">AUTOMATION & BROKER</h3>
+      
+      <div class="flex justify-between items-center mb-4">
+          <div>
+              <p class="font-bold text-sm">Auto-Execute Trades</p>
+              <p class="text-[10px] text-gray-400">Automatically place orders on signal</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+      </div>
+
+      <div class="flex justify-between items-center mb-4">
+        <div>
+            <p class="font-bold text-sm">Connect Broker</p>
+            <p class="text-[10px] text-gray-400">Zerodha / Upstox / Angel</p>
+        </div>
+        <button class="bg-blue-600 px-3 py-1 rounded text-xs font-bold">LINK</button>
+    </div>
+  </div>
+
+  <div class="velox-card p-4">
+      <h3 class="font-bold text-yellow-400 text-sm mb-4 border-b border-white/10 pb-2">GENERAL SETTINGS</h3>
+      
+      <div class="space-y-4">
+          <div class="flex justify-between items-center">
+             <span class="text-sm"><i class="fas fa-bell w-6 text-gray-400"></i> Notifications</span>
+             <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm"><i class="fas fa-volume-up w-6 text-gray-400"></i> Sound Alerts</span>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+         </div>
+         <div class="flex justify-between items-center">
+            <span class="text-sm"><i class="fas fa-palette w-6 text-gray-400"></i> Display / Theme</span>
+            <i class="fas fa-chevron-right text-xs text-gray-600"></i>
+         </div>
+         <div class="flex justify-between items-center" onclick="alert('Connecting to Support Chat...')">
+            <span class="text-sm"><i class="fas fa-headset w-6 text-gray-400"></i> Customer Support</span>
+            <i class="fas fa-chevron-right text-xs text-gray-600"></i>
+         </div>
+      </div>
   </div>
 </main>
 
-<!-- PORTFOLIO -->
-<main id="tab-portfolio" class="tab-panel pt-24 px-4 pb-24">
-  <div class="velox-card p-4">Broker-linked positions will appear here.</div>
-</main>
-
-<!-- SETTINGS -->
-<main id="tab-settings" class="tab-panel pt-24 px-4 pb-24">
-  <div class="velox-card p-4">Settings panel</div>
-</main>
-
-<nav class="fixed bottom-0 w-full bg-[#001f1f] border-t border-teal-800/50 flex justify-around py-3">
-  <button onclick="switchTab('home')" class="text-yellow-400">HOME</button>
-  <button onclick="switchTab('screener')">SCREENER</button>
-  <button onclick="switchTab('settings')">SETTINGS</button>
+<nav class="fixed bottom-0 w-full bg-[#001f1f] border-t border-teal-800/50 flex justify-around py-2 pb-5 z-40 backdrop-blur-md">
+  <button onclick="switchTab('home')" class="nav-btn active text-yellow-400 flex flex-col items-center p-2">
+      <i class="fas fa-home text-lg mb-1"></i>
+      <span class="text-[10px] font-bold">HOME</span>
+  </button>
+  <button onclick="switchTab('screener')" class="nav-btn text-gray-400 flex flex-col items-center p-2">
+      <i class="fas fa-radar text-lg mb-1"></i>
+      <span class="text-[10px] font-bold">SCANNER</span>
+  </button>
+  <button onclick="switchTab('settings')" class="nav-btn text-gray-400 flex flex-col items-center p-2">
+      <i class="fas fa-cog text-lg mb-1"></i>
+      <span class="text-[10px] font-bold">SETTINGS</span>
+  </button>
 </nav>
 
+<div id="trade-popup" class="popup-container velox-card w-[90%] max-w-sm bg-[#002b2b] border-2 border-yellow-400 shadow-[0_0_50px_rgba(251,191,36,0.5)]">
+    <div class="pulse-ring"></div>
+    <div class="bg-yellow-400 p-3 flex justify-between items-center rounded-t-xl">
+        <span class="text-black font-black flex items-center gap-2"><i class="fas fa-bolt"></i> SURE SHOT CALL</span>
+        <button onclick="closePopup()" class="text-black font-bold text-xl">&times;</button>
+    </div>
+    
+    <div class="p-5 text-center">
+        <h2 id="popup-stock" class="text-3xl font-black text-white mb-2">BANKNIFTY</h2>
+        <div class="inline-block bg-green-500 text-black font-bold px-3 py-1 rounded mb-4 animate-bounce">BUY CALL (CE)</div>
+        
+        <div class="grid grid-cols-3 gap-2 text-sm mb-6 bg-black/30 p-3 rounded-lg">
+            <div>
+                <p class="text-gray-400 text-[10px]">ENTRY</p>
+                <p id="popup-entry" class="font-bold text-white">450.00</p>
+            </div>
+            <div>
+                <p class="text-gray-400 text-[10px]">STOPLOSS</p>
+                <p id="popup-sl" class="font-bold text-red-400">420.00</p>
+            </div>
+            <div>
+                <p class="text-gray-400 text-[10px]">TARGET</p>
+                <p id="popup-tgt" class="font-bold text-green-400">510.00</p>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="closePopup()" class="flex-1 py-3 rounded-lg bg-gray-700 font-bold text-gray-300">IGNORE</button>
+            <button onclick="alert('Order Placed Successfully via Broker API'); closePopup()" class="flex-1 py-3 rounded-lg bg-green-500 text-black font-black text-lg shadow-lg">BUY NOW</button>
+        </div>
+        <p class="text-[10px] text-gray-500 mt-3">Confidence: 92% • Algo: TrendFollower V2</p>
+    </div>
 </div>
 
-<script src="scripts/logic.js"></script>
+</div> <script src="scripts/logic.js"></script>
 </body>
 </html>
