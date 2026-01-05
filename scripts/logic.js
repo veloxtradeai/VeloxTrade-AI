@@ -1,36 +1,54 @@
 /* =========================================================
-   VELOX TRADE AI — FRONTEND LOGIC (PHASE-1 FULL)
-   - No fake popup
-   - Market gate respected
-   - Continuous scanner
-   - Broker-agnostic execution framework
+   VELOX TRADE AI — FINAL LOGIC.JS
+   Compatible with your ORIGINAL index.html
    ========================================================= */
 
 const API = "https://velox-backend.velox-trade-ai.workers.dev";
 
-/* ===================== APP INIT ===================== */
+/* ===================== INIT ===================== */
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem("logged") === "1") {
+  if (localStorage.getItem("isLoggedIn") === "true") {
     showApp();
   }
 });
 
 /* ===================== AUTH ===================== */
 
+function switchAuth(type) {
+  const loginForm = document.getElementById("login-form");
+  const signupForm = document.getElementById("signup-form");
+  const tabLogin = document.getElementById("tab-login");
+  const tabSignup = document.getElementById("tab-signup");
+
+  if (type === "login") {
+    loginForm.classList.remove("hidden");
+    signupForm.classList.add("hidden");
+    tabLogin.classList.add("bg-yellow-400", "text-black");
+    tabSignup.classList.remove("bg-yellow-400", "text-black");
+    tabSignup.classList.add("text-gray-400");
+  } else {
+    signupForm.classList.remove("hidden");
+    loginForm.classList.add("hidden");
+    tabSignup.classList.add("bg-yellow-400", "text-black");
+    tabLogin.classList.remove("bg-yellow-400", "text-black");
+    tabLogin.classList.add("text-gray-400");
+  }
+}
+
 function handleLogin() {
   const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-pass").value;
+  const pass = document.getElementById("login-pass").value;
 
   fetch(API + "/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password: pass })
   })
     .then(r => r.json())
     .then(d => {
       if (d.status === "OK") {
-        localStorage.setItem("logged", "1");
+        localStorage.setItem("isLoggedIn", "true");
         showApp();
       } else {
         alert("Login failed");
@@ -43,11 +61,11 @@ function showApp() {
   document.getElementById("auth-screen").classList.add("hidden");
   document.getElementById("app-container").classList.remove("hidden");
   initTabs();
-  initMarketStatus();
-  initScanner();
+  checkMarketStatus();
+  startScanner();
 }
 
-/* ===================== TABS & NAV ===================== */
+/* ===================== TABS ===================== */
 
 function initTabs() {
   switchTab("home");
@@ -59,10 +77,10 @@ function switchTab(tab) {
     p.style.display = "none";
   });
 
-  const target = document.getElementById("tab-" + tab);
-  if (target) {
-    target.style.display = "block";
-    setTimeout(() => target.classList.add("active-panel"), 10);
+  const active = document.getElementById("tab-" + tab);
+  if (active) {
+    active.style.display = "block";
+    active.classList.add("active-panel");
   }
 
   document.querySelectorAll(".nav-btn").forEach(b => {
@@ -88,7 +106,7 @@ function toggleSidebar() {
 
 let marketLive = false;
 
-function initMarketStatus() {
+function checkMarketStatus() {
   const now = new Date();
   const ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
   const h = ist.getHours();
@@ -99,22 +117,22 @@ function initMarketStatus() {
     (h < 15 || (h === 15 && m <= 30));
 
   if (marketLive) {
-    setMarketLive();
+    setMarketLiveUI();
   } else {
-    setMarketClosed();
+    setMarketClosedUI();
   }
 }
 
-function setMarketLive() {
+function setMarketLiveUI() {
   document.getElementById("market-status-text").innerText = "MARKET LIVE";
   document.getElementById("market-status-text").className =
     "text-[9px] text-green-400 font-bold tracking-widest uppercase";
 
   document.getElementById("ai-status-text").innerText =
-    "AI Scanner active. Searching for high-probability setups…";
+    "AI Scanner active. Searching high-probability intraday setups...";
 }
 
-function setMarketClosed() {
+function setMarketClosedUI() {
   document.getElementById("market-status-text").innerText = "MARKET CLOSED";
   document.getElementById("market-status-text").className =
     "text-[9px] text-red-400 font-bold tracking-widest uppercase";
@@ -123,78 +141,55 @@ function setMarketClosed() {
     "Market closed. Scanner paused.";
 }
 
-/* ===================== SCANNER (CONTINUOUS) ===================== */
+/* ===================== SCANNER ===================== */
 
-let scannerTimer = null;
-let activeTrade = null; // holds current active trade state
+let scannerInterval = null;
+let activeTrade = null;
 
-function initScanner() {
-  if (!marketLive) return; // respect gate
-  if (scannerTimer) clearInterval(scannerTimer);
+function startScanner() {
+  if (!marketLive) return;
+  if (scannerInterval) clearInterval(scannerInterval);
 
-  // Continuous scan while market is live
-  scannerTimer = setInterval(fetchSignals, 5000);
+  scannerInterval = setInterval(fetchSignal, 5000);
 }
 
-async function fetchSignals() {
+async function fetchSignal() {
+  if (!marketLive || activeTrade) return;
+
   try {
     const res = await fetch(API + "/signals");
     const data = await res.json();
 
-    // Backend controls truth
     if (data.status === "LEVEL_READY") {
-      // If no active trade, present new opportunity
-      if (!activeTrade) {
-        presentSignal(data);
-      }
+      activeTrade = data;
+      showPopup(data);
     }
   } catch (e) {
     console.log("Signal fetch error");
   }
 }
 
-/* ===================== SIGNAL PRESENTATION ===================== */
+/* ===================== POPUP ===================== */
 
-function presentSignal(s) {
-  activeTrade = {
-    symbol: s.symbol,
-    entry: s.entry,
-    sl: s.stoploss,
-    targets: s.targets,
-    trailStep: Math.max(20, Math.round((s.entry - s.stoploss) * 0.4)),
-    lastTrailAt: s.entry
-  };
+function showPopup(data) {
+  document.getElementById("popup-stock").innerText = data.symbol;
+  document.getElementById("popup-price").innerText = "₹" + data.entry;
 
-  // Fill popup
-  document.getElementById("popup-stock").innerText = s.symbol;
-  document.getElementById("popup-price").innerText = "₹" + s.entry;
+  const popup = document.getElementById("ai-popup-container");
+  popup.classList.remove("popup-hidden");
+  popup.classList.add("popup-visible");
 
-  openPopup();
   playRing();
 }
 
-/* ===================== POPUP & ALERTS ===================== */
-
-function openPopup() {
-  const p = document.getElementById("ai-popup-container");
-  p.classList.remove("popup-hidden");
-  p.classList.add("popup-visible");
-}
-
 function closePopup() {
-  const p = document.getElementById("ai-popup-container");
-  p.classList.remove("popup-visible");
-  p.classList.add("popup-hidden");
+  const popup = document.getElementById("ai-popup-container");
+  popup.classList.remove("popup-visible");
+  popup.classList.add("popup-hidden");
+  activeTrade = null;
 }
 
-function playRing() {
-  try {
-    const audio = new Audio("/assets/alert.mp3"); // optional asset
-    audio.play();
-  } catch (_) {}
-}
-
-/* ===================== EXECUTION (BROKER-AGNOSTIC) ===================== */
+/* ===================== EXECUTION ===================== */
 
 function executeOrder() {
   if (!activeTrade) return;
@@ -202,68 +197,33 @@ function executeOrder() {
   const broker = localStorage.getItem("broker") || "groww";
   let url = "";
 
-  // Deep-link / web redirect framework
-  if (broker === "groww") {
-    url = `https://groww.in/stocks/${activeTrade.symbol}`;
-  } else if (broker === "zerodha") {
-    url = "https://kite.zerodha.com";
-  } else if (broker === "upstox") {
-    url = "https://pro.upstox.com";
-  } else if (broker === "angel") {
-    url = "https://trade.angelbroking.com";
-  }
+  if (broker === "groww") url = `https://groww.in/stocks/${activeTrade.symbol}`;
+  if (broker === "zerodha") url = "https://kite.zerodha.com";
+  if (broker === "upstox") url = "https://pro.upstox.com";
+  if (broker === "angel") url = "https://trade.angelbroking.com";
 
   window.open(url, "_blank");
   closePopup();
-
-  // Start auto-management hooks
-  startAutoManagement();
 }
 
-/* ===================== AUTO MANAGEMENT (FRAMEWORK) ===================== */
-/* NOTE:
-   - Real price feed will come from broker/data adapter (Phase-2)
-   - Below logic is hook-ready (no fake updates)
-*/
+/* ===================== BROKER ===================== */
 
-function startAutoManagement() {
-  // Placeholder hook: when real LTP feed attaches,
-  // call onPriceUpdate(ltp)
+function setBroker(b) {
+  localStorage.setItem("broker", b);
 }
 
-function onPriceUpdate(ltp) {
-  if (!activeTrade) return;
+/* ===================== SOUND ===================== */
 
-  // Trailing SL logic
-  if (ltp >= activeTrade.lastTrailAt + activeTrade.trailStep) {
-    activeTrade.sl += activeTrade.trailStep;
-    activeTrade.lastTrailAt = ltp;
-  }
-
-  // Exit alerts
-  if (ltp <= activeTrade.sl) {
-    alertExit("STOPLOSS HIT");
-    activeTrade = null;
-  }
-
-  if (ltp >= activeTrade.targets[activeTrade.targets.length - 1]) {
-    alertExit("TARGET ACHIEVED");
-    activeTrade = null;
-  }
+function playRing() {
+  try {
+    const audio = new Audio("/assets/alert.mp3");
+    audio.play();
+  } catch (_) {}
 }
 
-function alertExit(msg) {
-  alert(msg);
-  playRing();
-}
-
-/* ===================== SETTINGS / UTIL ===================== */
-
-function setBroker(name) {
-  localStorage.setItem("broker", name);
-}
+/* ===================== LOGOUT ===================== */
 
 function logout() {
-  localStorage.removeItem("logged");
+  localStorage.removeItem("isLoggedIn");
   location.reload();
 }
