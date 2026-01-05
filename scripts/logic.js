@@ -1,5 +1,7 @@
 const API = "https://velox-backend.velox-trade-ai.workers.dev";
 
+/* ================= INIT ================= */
+
 document.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem("logged") === "1") {
     showApp();
@@ -17,63 +19,107 @@ function handleLogin() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status !== "OK") {
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === "OK") {
+        localStorage.setItem("logged", "1");
+        showApp();
+      } else {
         alert("Login failed");
-        return;
       }
-      localStorage.setItem("logged", "1");
-      showApp();
     })
-    .catch(() => alert("Server not reachable"));
+    .catch(() => alert("Backend not reachable"));
 }
 
 function showApp() {
   document.getElementById("auth-screen").classList.add("hidden");
   document.getElementById("app-container").classList.remove("hidden");
-  startSignalWatcher();
+  initTabs();
+  initMarketStatus();
 }
 
-/* ================= SIGNAL WATCHER ================= */
+/* ================= TABS ================= */
 
-function startSignalWatcher() {
-  setInterval(async () => {
-    try {
-      const res = await fetch(API + "/signals");
-      const data = await res.json();
-
-      if (data.status === "SIGNAL") {
-        openSignalPopup(data);
-      }
-    } catch (e) {
-      console.log("Signal fetch error");
-    }
-  }, 5000);
+function initTabs() {
+  switchTab("home");
 }
 
-/* ================= POPUP ================= */
+function switchTab(tab) {
+  document.querySelectorAll(".tab-panel").forEach(p => {
+    p.classList.remove("active-panel");
+    p.style.display = "none";
+  });
 
-function openSignalPopup(s) {
-  document.getElementById("popup-stock").innerText = s.symbol;
-  document.getElementById("popup-price").innerText = "₹" + s.entry;
-  window.currentSignal = s;
+  const target = document.getElementById("tab-" + tab);
+  if (target) {
+    target.style.display = "block";
+    setTimeout(() => target.classList.add("active-panel"), 10);
+  }
 
-  const popup = document.getElementById("ai-popup-container");
-  popup.classList.remove("popup-hidden");
-  popup.classList.add("popup-visible");
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    b.classList.remove("text-yellow-400");
+    b.classList.add("text-gray-500");
+  });
+
+  const btn = document.getElementById("btn-" + tab);
+  if (btn) {
+    btn.classList.add("text-yellow-400");
+    btn.classList.remove("text-gray-500");
+  }
 }
 
-function closePopup() {
-  const popup = document.getElementById("ai-popup-container");
-  popup.classList.remove("popup-visible");
-  popup.classList.add("popup-hidden");
+/* ================= SIDEBAR ================= */
+
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("sidebar-open");
+  document.getElementById("overlay").classList.toggle("overlay-active");
 }
 
-/* ================= BUY ================= */
+/* ================= MARKET STATUS ================= */
 
-function executeOrder() {
-  const s = window.currentSignal;
-  const url = `https://groww.in/stocks/${s.symbol}`;
-  window.open(url, "_blank");
+function initMarketStatus() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+
+  const marketOpen = (h > 9 || (h === 9 && m >= 15)) &&
+                     (h < 15 || (h === 15 && m <= 30));
+
+  if (marketOpen) {
+    setMarketLive();
+  } else {
+    setMarketClosed();
+  }
+}
+
+function setMarketLive() {
+  document.getElementById("market-status-text").innerText = "MARKET LIVE";
+  document.getElementById("market-status-text").className =
+    "text-[9px] text-green-400 font-bold tracking-widest uppercase";
+
+  document.getElementById("ai-status-text").innerText =
+    "AI Scanner ready. Waiting for valid setups...";
+}
+
+function setMarketClosed() {
+  document.getElementById("market-status-text").innerText = "MARKET CLOSED";
+  document.getElementById("market-status-text").className =
+    "text-[9px] text-red-400 font-bold tracking-widest uppercase";
+
+  document.getElementById("ai-status-text").innerText =
+    "Market closed. Scanner inactive.";
+}
+
+/* ================= SETTINGS TOGGLES ================= */
+
+function toggleSetting(el) {
+  el.classList.toggle("fa-toggle-on");
+  el.classList.toggle("fa-toggle-off");
+}
+
+/* ================= LOGOUT ================= */
+
+function logout() {
+  localStorage.removeItem("logged");
+  location.reload();
 }
