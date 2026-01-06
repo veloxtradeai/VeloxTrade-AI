@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VeloxTrade Pro</title>
+<title>VeloxTrade Pro - Trading Terminal</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,7 +16,6 @@
     --teal-light: #004d4d;
     --gold: #fbbf24;
     --gold-dark: #d97706;
-    --text-main: #e0f2f1;
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -24,10 +23,10 @@
 body {
     background: linear-gradient(135deg, var(--teal-deep) 0%, #000 100%);
     background-attachment: fixed;
-    color: var(--text-main);
+    color: #e0f2f1;
     font-family: 'Rajdhani', sans-serif;
     overflow-x: hidden;
-    padding-bottom: 100px;
+    padding-bottom: 130px;
 }
 
 .velox-card {
@@ -84,6 +83,40 @@ body {
 .popup { position: fixed; bottom: -500px; left: 0; right: 0; z-index: 100; transition: all 0.3s; }
 .popup.show { bottom: 0; }
 
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,43,43,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(251,191,36,0.15);
+    display: flex;
+    justify-content: space-around;
+    z-index: 50;
+    padding: 8px 0 20px 0;
+}
+
+.nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    cursor: pointer;
+    color: #888;
+    font-size: 12px;
+    font-weight: bold;
+    transition: 0.2s;
+    flex: 1;
+}
+
+.nav-tab.active {
+    color: var(--gold);
+}
+
+.nav-tab i { font-size: 20px; }
+
 .live-dot { 
     width: 10px; 
     height: 10px; 
@@ -96,25 +129,6 @@ body {
 .live-dot.connected { 
     background: #22c55e;
     box-shadow: 0 0 10px #22c55e;
-}
-
-.tabs-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
-.tab-btn {
-    padding: 8px 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.tab-btn.active {
-    background: var(--gold);
-    color: #000;
-    border-color: var(--gold);
 }
 
 .list-item {
@@ -158,16 +172,12 @@ body {
 .toggle-switch.on::after {
     left: 24px;
 }
-
-@media (max-width: 768px) {
-    body { padding-bottom: 120px; }
-}
 </style>
 </head>
 
 <body class="select-none">
 
-<!-- AUTH SCREEN (LOGIN PAGE - ORIGINAL DESIGN PRESERVED) -->
+<!-- AUTH SCREEN -->
 <div id="auth-screen" class="fixed inset-0 z-[200] bg-[#001f1f] flex flex-col justify-center p-6">
     <div class="text-center mb-10">
         <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6 animate-pulse">
@@ -186,7 +196,7 @@ body {
         <div id="login-form">
             <input id="login-user" class="input-box w-full p-4 mb-3" placeholder="USER ID / EMAIL" value="user123">
             <input id="login-pass" class="input-box w-full p-4 mb-6" type="password" placeholder="PASSWORD" value="123456">
-            <button onclick="handleLogin()" class="btn-gold w-full py-4 rounded-xl text-lg">ACCESS TERMINAL</button>
+            <button onclick="appLogin()" class="btn-gold w-full py-4 rounded-xl text-lg">ACCESS TERMINAL</button>
         </div>
 
         <div id="signup-form" class="hidden">
@@ -217,7 +227,7 @@ body {
         </div>
     </div>
     <div class="text-right">
-        <p class="text-[9px] text-gray-400 uppercase font-bold">Available</p>
+        <p class="text-[9px] text-gray-400 uppercase font-bold">Balance</p>
         <p id="header-balance" class="text-lg font-bold font-mono text-yellow-400">₹50,000</p>
     </div>
 </header>
@@ -235,20 +245,29 @@ body {
         </div>
 
         <nav class="space-y-2">
-            <button onclick="navScreen('home')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
-                <i class="fas fa-home text-yellow-400 w-5"></i> <span>Home</span>
+            <button onclick="navScreen('profile')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
+                <i class="fas fa-user-circle text-yellow-400 w-5"></i> <span>My Profile</span>
             </button>
-            <button onclick="navScreen('portfolio')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
-                <i class="fas fa-briefcase text-yellow-400 w-5"></i> <span>Portfolio</span>
+            <button onclick="navScreen('holdings')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
+                <i class="fas fa-chart-line text-yellow-400 w-5"></i> <span>Holdings</span>
             </button>
             <button onclick="navScreen('orders')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
                 <i class="fas fa-exchange-alt text-yellow-400 w-5"></i> <span>Orders</span>
             </button>
-            <button onclick="navScreen('screener')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
-                <i class="fas fa-microscope text-yellow-400 w-5"></i> <span>Screener</span>
+            <button onclick="navScreen('account')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
+                <i class="fas fa-credit-card text-yellow-400 w-5"></i> <span>Account Details</span>
             </button>
-            <button onclick="navScreen('notifications')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
-                <i class="fas fa-bell text-yellow-400 w-5"></i> <span>Notifications</span>
+            <button onclick="navScreen('banks')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
+                <i class="fas fa-building text-yellow-400 w-5"></i> <span>Banks & Autopay</span>
+            </button>
+            <button onclick="navScreen('refer')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
+                <i class="fas fa-share-alt text-yellow-400 w-5"></i> <span>Refer & Earn</span>
+            </button>
+            <button onclick="navScreen('support')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
+                <i class="fas fa-headset text-yellow-400 w-5"></i> <span>Customer Support</span>
+            </button>
+            <button onclick="navScreen('reports')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
+                <i class="fas fa-file-alt text-yellow-400 w-5"></i> <span>Reports</span>
             </button>
             <button onclick="navScreen('settings')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 transition flex items-center gap-3">
                 <i class="fas fa-cog text-yellow-400 w-5"></i> <span>Settings</span>
@@ -256,14 +275,14 @@ body {
         </nav>
 
         <hr class="border-white/10">
-        <button onclick="logout()" class="w-full text-left p-3 rounded-lg text-red-400 hover:bg-red-500/10 transition flex items-center gap-3">
+        <button onclick="appLogout()" class="w-full text-left p-3 rounded-lg text-red-400 hover:bg-red-500/10 transition flex items-center gap-3">
             <i class="fas fa-power-off w-5"></i> <span>Logout</span>
         </button>
     </div>
 </div>
 
-<!-- HOME SCREEN -->
-<div id="screen-home" class="screen active pt-20 px-4 pb-24 space-y-4">
+<!-- STOCKS SCREEN (HOME/DEFAULT) -->
+<div id="screen-stocks" class="screen active pt-20 px-4 pb-24 space-y-4">
     <div class="grid grid-cols-2 gap-3">
         <div class="velox-card p-3 border-l-4 border-green-500">
             <span class="text-[9px] text-gray-400 uppercase font-bold">NIFTY 50</span>
@@ -288,32 +307,32 @@ body {
         </button>
     </div>
 
-    <div class="space-y-2">
-        <h4 class="font-bold text-sm text-gray-400">TABS</h4>
-        <div class="tabs-container">
-            <button class="tab-btn active">Explore</button>
-            <button class="tab-btn">Holdings</button>
-            <button class="tab-btn">Positions</button>
-            <button class="tab-btn">Orders</button>
-        </div>
+    <h4 class="font-bold text-sm text-gray-400">EXPLORE • HOLDINGS • POSITIONS • ORDERS</h4>
+    <div class="grid grid-cols-4 gap-2">
+        <button class="velox-card p-2 text-center hover:bg-white/5 text-xs font-bold">Explore</button>
+        <button class="velox-card p-2 text-center hover:bg-white/5 text-xs font-bold">Holdings</button>
+        <button class="velox-card p-2 text-center hover:bg-white/5 text-xs font-bold">Positions</button>
+        <button class="velox-card p-2 text-center hover:bg-white/5 text-xs font-bold">Orders</button>
     </div>
 
-    <div class="space-y-2">
-        <h4 class="font-bold text-sm text-gray-400">TOOLS</h4>
-        <div class="grid grid-cols-3 gap-2">
-            <button class="velox-card p-3 text-center hover:bg-white/5 transition">
-                <i class="fas fa-filter text-yellow-400 text-lg mb-1"></i>
-                <p class="text-[9px] font-bold">Screener</p>
-            </button>
-            <button class="velox-card p-3 text-center hover:bg-white/5 transition">
-                <i class="fas fa-landmark text-yellow-400 text-lg mb-1"></i>
-                <p class="text-[9px] font-bold">IPO</p>
-            </button>
-            <button class="velox-card p-3 text-center hover:bg-white/5 transition">
-                <i class="fas fa-calendar text-yellow-400 text-lg mb-1"></i>
-                <p class="text-[9px] font-bold">Events</p>
-            </button>
-        </div>
+    <h4 class="font-bold text-sm text-gray-400 mt-4">TOOLS</h4>
+    <div class="grid grid-cols-4 gap-2">
+        <button class="velox-card p-3 text-center hover:bg-white/5 transition">
+            <i class="fas fa-filter text-yellow-400 text-lg mb-1"></i>
+            <p class="text-[9px] font-bold">Screener</p>
+        </button>
+        <button class="velox-card p-3 text-center hover:bg-white/5 transition">
+            <i class="fas fa-landmark text-yellow-400 text-lg mb-1"></i>
+            <p class="text-[9px] font-bold">IPO</p>
+        </button>
+        <button class="velox-card p-3 text-center hover:bg-white/5 transition">
+            <i class="fas fa-calendar text-yellow-400 text-lg mb-1"></i>
+            <p class="text-[9px] font-bold">Events</p>
+        </button>
+        <button class="velox-card p-3 text-center hover:bg-white/5 transition">
+            <i class="fas fa-chart-pie text-yellow-400 text-lg mb-1"></i>
+            <p class="text-[9px] font-bold">Portfolio</p>
+        </button>
     </div>
 
     <div class="velox-card p-0 overflow-hidden">
@@ -365,16 +384,73 @@ body {
     </div>
 </div>
 
-<!-- PORTFOLIO SCREEN -->
-<div id="screen-portfolio" class="screen pt-20 px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">Portfolio</h2>
+<!-- F&O SCREEN -->
+<div id="screen-fo" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">F&O - Futures & Options</h2>
+    <div class="velox-card p-4">
+        <h3 class="font-bold mb-2">Active Positions</h3>
+        <p class="text-xs text-gray-400">No active F&O positions</p>
+    </div>
+</div>
+
+<!-- MUTUAL FUNDS SCREEN -->
+<div id="screen-mf" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Mutual Funds</h2>
+    <div class="velox-card p-4">
+        <h3 class="font-bold mb-2">Your Funds</h3>
+        <p class="text-xs text-gray-400">No mutual funds purchased</p>
+    </div>
+</div>
+
+<!-- UPI/PAYMENT SCREEN -->
+<div id="screen-upi" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">UPI & Payment</h2>
+    <div class="velox-card p-4">
+        <h3 class="font-bold mb-2">Quick Transfer</h3>
+        <input class="input-box w-full p-3 mb-3" placeholder="Enter UPI ID">
+        <input class="input-box w-full p-3 mb-3" placeholder="Amount">
+        <button class="btn-gold w-full py-2 rounded-lg">SEND</button>
+    </div>
+</div>
+
+<!-- PROFILE SCREEN -->
+<div id="screen-profile" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">My Profile</h2>
+    <div class="velox-card p-6 text-center border-2 border-yellow-400">
+        <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&background=fbbf24&color=000" class="w-16 h-16 rounded-full mx-auto mb-3 border-2 border-yellow-400">
+        <h3 id="profile-name" class="text-xl font-bold">Velox User</h3>
+        <p class="text-xs text-yellow-400">Pro Plan Active <i class="fas fa-crown"></i></p>
+        <p class="text-xs text-gray-400 mt-2">ID: VX-99281</p>
+    </div>
+
+    <div class="velox-card p-4 space-y-3">
+        <div class="flex justify-between pb-3 border-b border-white/10">
+            <span class="text-gray-400">Email</span>
+            <span id="profile-email" class="font-bold">user@velox.ai</span>
+        </div>
+        <div class="flex justify-between pb-3 border-b border-white/10">
+            <span class="text-gray-400">Mobile</span>
+            <span id="profile-mobile" class="font-bold">+91 9876543210</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-gray-400">Member Since</span>
+            <span class="font-bold">01 Jan 2024</span>
+        </div>
+    </div>
+
+    <button class="btn-gold w-full py-3 rounded-xl">EDIT PROFILE</button>
+</div>
+
+<!-- HOLDINGS SCREEN -->
+<div id="screen-holdings" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Holdings</h2>
     <div class="velox-card p-4 bg-gradient-to-r from-yellow-600/20 to-transparent">
         <p class="text-xs text-gray-300 uppercase font-bold">Total P&L</p>
         <h2 class="text-3xl font-black text-green-400">+₹4,250.00</h2>
         <p class="text-[10px] text-gray-400">Invested: ₹45,000 | Current: ₹49,250</p>
     </div>
 
-    <h3 class="font-bold text-sm text-gray-400 mt-4 uppercase">Holdings (2)</h3>
+    <h3 class="font-bold text-sm text-gray-400">HOLDINGS (2)</h3>
     <div class="velox-card p-0 overflow-hidden">
         <div class="p-4 border-b border-white/5">
             <div class="flex justify-between">
@@ -428,122 +504,9 @@ body {
     </div>
 </div>
 
-<!-- SCREENER SCREEN -->
-<div id="screen-screener" class="screen pt-20 px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">AI Screener</h2>
-    <button onclick="runScreener()" class="btn-gold w-full py-3 rounded-xl">RUN SCREENER</button>
-    <div id="screener-results" class="text-sm text-gray-400">No results. Start screening to find opportunities.</div>
-</div>
-
-<!-- NOTIFICATIONS SCREEN -->
-<div id="screen-notifications" class="screen pt-20 px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">Notifications</h2>
-    <div class="velox-card p-4">
-        <div class="flex gap-3 mb-3">
-            <i class="fas fa-bell text-yellow-400 text-lg"></i>
-            <div class="flex-1">
-                <p class="font-bold text-sm">Trade Signal Detected</p>
-                <p class="text-xs text-gray-400">BANKNIFTY showing bullish pattern</p>
-                <p class="text-[9px] text-gray-500">2 min ago</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- SETTINGS SCREEN -->
-<div id="screen-settings" class="screen pt-20 px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">Settings</h2>
-
-    <div onclick="navScreen('profile')" class="velox-card p-4 flex items-center gap-4 cursor-pointer hover:bg-white/5">
-        <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&background=fbbf24&color=000" class="w-12 h-12 rounded-full">
-        <div class="flex-1">
-            <h3 class="font-bold text-lg" id="profile-name">Velox User</h3>
-            <p class="text-xs text-yellow-400">Pro Plan Active <i class="fas fa-crown"></i></p>
-        </div>
-        <i class="fas fa-chevron-right text-gray-500"></i>
-    </div>
-
-    <div class="velox-card overflow-hidden">
-        <div class="list-item" onclick="navScreen('subscription')">
-            <div class="flex items-center gap-3"><i class="fas fa-wallet text-yellow-400"></i> <span>Subscription</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-        <div class="list-item" onclick="navScreen('account')">
-            <div class="flex items-center gap-3"><i class="fas fa-user-circle text-yellow-400"></i> <span>Account Details</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-        <div class="list-item" onclick="navScreen('payment')">
-            <div class="flex items-center gap-3"><i class="fas fa-credit-card text-yellow-400"></i> <span>Payment Methods</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-        <div class="list-item" onclick="navScreen('automode')">
-            <div class="flex items-center gap-3"><i class="fas fa-robot text-yellow-400"></i> <span>Auto-Trade Mode</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-        <div class="list-item" onclick="navScreen('general')">
-            <div class="flex items-center gap-3"><i class="fas fa-cog text-yellow-400"></i> <span>General</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-        <div class="list-item" onclick="navScreen('display')">
-            <div class="flex items-center gap-3"><i class="fas fa-palette text-yellow-400"></i> <span>Display</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-        <div class="list-item" onclick="navScreen('sound')">
-            <div class="flex items-center gap-3"><i class="fas fa-volume-up text-yellow-400"></i> <span>Sound</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-        <div class="list-item" onclick="navScreen('support')">
-            <div class="flex items-center gap-3"><i class="fas fa-headset text-yellow-400"></i> <span>Support</span></div>
-            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-        </div>
-    </div>
-
-    <p class="text-center text-[10px] text-gray-500">VeloxTrade AI v4.0.0 (Build 2026)</p>
-</div>
-
-<!-- PROFILE SETTINGS -->
-<div id="screen-profile" class="screen pt-20 px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Edit Profile</h2>
-    <div class="velox-card p-6 space-y-4">
-        <input class="input-box w-full p-3" placeholder="Full Name" value="Velox User">
-        <input class="input-box w-full p-3" placeholder="Email" value="user@velox.ai">
-        <input class="input-box w-full p-3" placeholder="Mobile" value="+91 9876543210">
-        <input class="input-box w-full p-3" placeholder="Username" value="veloxuser">
-        <button class="btn-gold w-full py-3 rounded-xl">SAVE PROFILE</button>
-        <button class="w-full py-3 bg-red-500/10 text-red-400 rounded-xl font-bold">DELETE ACCOUNT</button>
-    </div>
-</div>
-
-<!-- SUBSCRIPTION SETTINGS -->
-<div id="screen-subscription" class="screen pt-20 px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Subscription</h2>
-    <div class="velox-card p-6 text-center border-2 border-yellow-400">
-        <i class="fas fa-crown text-4xl text-yellow-400 mb-2"></i>
-        <h3 class="text-xl font-bold">PRO TRADER</h3>
-        <p class="text-gray-400 mb-4">Valid till: 30 Dec 2026</p>
-        <button class="w-full py-3 bg-white/10 rounded border border-white/20 mb-2 font-bold">RENEW PLAN</button>
-        <button class="w-full py-3 bg-white/10 rounded border border-white/20 font-bold">UPGRADE PLAN</button>
-    </div>
-    
-    <h3 class="font-bold mt-6">Deposit / Withdraw</h3>
-    <div class="flex gap-3">
-        <button class="flex-1 velox-card p-4 text-center hover:bg-white/5">
-            <i class="fas fa-arrow-down text-green-400 text-lg mb-1"></i>
-            <p class="text-xs font-bold">Deposit</p>
-        </button>
-        <button class="flex-1 velox-card p-4 text-center hover:bg-white/5">
-            <i class="fas fa-arrow-up text-red-400 text-lg mb-1"></i>
-            <p class="text-xs font-bold">Withdraw</p>
-        </button>
-    </div>
-</div>
-
-<!-- ACCOUNT DETAILS -->
+<!-- ACCOUNT DETAILS SCREEN -->
 <div id="screen-account" class="screen pt-20 px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Account Details</h2>
+    <h2 class="text-2xl font-bold mb-4">Account Details</h2>
     <div class="velox-card p-4 space-y-3">
         <div class="flex justify-between pb-3 border-b border-white/10">
             <span class="text-gray-400">User ID</span>
@@ -557,18 +520,22 @@ body {
             <span class="text-gray-400">Created On</span>
             <span class="font-bold">01 Jan 2024</span>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between pb-3 border-b border-white/10">
             <span class="text-gray-400">Status</span>
             <span class="font-bold text-green-400">Active <i class="fas fa-check-circle"></i></span>
         </div>
+        <div class="flex justify-between">
+            <span class="text-gray-400">PAN</span>
+            <span class="font-mono text-xs font-bold">ABCD1234E</span>
+        </div>
     </div>
-    <button class="btn-gold w-full py-3 rounded-xl mt-4">EDIT ACCOUNT</button>
 </div>
 
-<!-- PAYMENT SETTINGS -->
-<div id="screen-payment" class="screen pt-20 px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Payment Methods</h2>
+<!-- BANKS & AUTOPAY SCREEN -->
+<div id="screen-banks" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Banks & Autopay</h2>
+    
+    <h3 class="font-bold text-sm mt-4">LINKED BANKS</h3>
     <div class="velox-card p-4 space-y-3">
         <div class="flex items-center justify-between p-3 bg-black/30 rounded-lg">
             <div class="flex items-center gap-3">
@@ -581,7 +548,188 @@ body {
             <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">PRIMARY</span>
         </div>
     </div>
-    <button class="w-full py-3 bg-white/10 border border-white/20 rounded-xl font-bold mt-4">ADD PAYMENT METHOD</button>
+
+    <button class="w-full py-3 bg-white/10 border border-white/20 rounded-xl font-bold mt-4">+ ADD BANK ACCOUNT</button>
+
+    <h3 class="font-bold text-sm mt-6">AUTOPAY SETTINGS</h3>
+    <div class="velox-card p-4 space-y-4">
+        <div class="flex justify-between items-center">
+            <span class="font-bold">Enable Autopay</span>
+            <div class="toggle-switch on" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="font-bold">Auto Debit on Margin Call</span>
+            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+        </div>
+    </div>
+</div>
+
+<!-- REFER & EARN SCREEN -->
+<div id="screen-refer" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Refer & Earn</h2>
+    
+    <div class="velox-card p-6 text-center border-2 border-yellow-400">
+        <i class="fas fa-gift text-4xl text-yellow-400 mb-2"></i>
+        <h3 class="text-lg font-bold">Share & Earn</h3>
+        <p class="text-xs text-gray-400 mt-2">Get ₹500 for each friend you refer</p>
+    </div>
+
+    <div class="velox-card p-4">
+        <p class="text-xs text-gray-400 mb-2">Your Referral Code</p>
+        <div class="flex gap-2">
+            <input id="refer-code" class="input-box flex-1 p-3" value="VELOX2024ABC" readonly>
+            <button onclick="copyRefer()" class="bg-yellow-400 text-black px-3 rounded-lg font-bold">COPY</button>
+        </div>
+    </div>
+
+    <div class="velox-card p-4 space-y-2">
+        <p class="text-xs text-gray-400">Earnings: <span class="text-green-400 font-bold">₹2,500</span></p>
+        <p class="text-xs text-gray-400">Friends Referred: <span class="font-bold">5</span></p>
+    </div>
+
+    <button class="w-full btn-gold py-3 rounded-xl">SHARE REFERRAL</button>
+</div>
+
+<!-- CUSTOMER SUPPORT SCREEN -->
+<div id="screen-support" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Help & Support</h2>
+    
+    <div class="space-y-3">
+        <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
+            <i class="fas fa-comments text-yellow-400 text-lg"></i>
+            <div>
+                <p class="font-bold">Live Chat Support</p>
+                <p class="text-xs text-gray-400">Get help instantly</p>
+            </div>
+        </button>
+        <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
+            <i class="fas fa-envelope text-yellow-400 text-lg"></i>
+            <div>
+                <p class="font-bold">Email Support</p>
+                <p class="text-xs text-gray-400">support@velox.ai</p>
+            </div>
+        </button>
+        <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
+            <i class="fas fa-phone text-yellow-400 text-lg"></i>
+            <div>
+                <p class="font-bold">Call Support</p>
+                <p class="text-xs text-gray-400">+91 9876543210</p>
+            </div>
+        </button>
+        <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
+            <i class="fas fa-book text-yellow-400 text-lg"></i>
+            <div>
+                <p class="font-bold">Knowledge Base</p>
+                <p class="text-xs text-gray-400">View FAQs & guides</p>
+            </div>
+        </button>
+    </div>
+</div>
+
+<!-- REPORTS SCREEN -->
+<div id="screen-reports" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Reports & Transactions</h2>
+    
+    <div class="flex gap-2 mb-4">
+        <button class="flex-1 py-2 px-3 bg-yellow-400 text-black text-xs font-bold rounded">TRANSACTIONS</button>
+        <button class="flex-1 py-2 px-3 bg-white/10 text-gray-400 text-xs font-bold rounded">TAX REPORT</button>
+    </div>
+
+    <div class="space-y-3">
+        <div class="velox-card p-4">
+            <div class="flex justify-between mb-2">
+                <span class="font-bold">Deposit ₹10,000</span>
+                <span class="text-green-400 font-bold">+₹10,000</span>
+            </div>
+            <p class="text-xs text-gray-400">Jan 15, 2024 • 3:45 PM</p>
+        </div>
+        <div class="velox-card p-4">
+            <div class="flex justify-between mb-2">
+                <span class="font-bold">Profit on SBIN</span>
+                <span class="text-green-400 font-bold">+₹1,200</span>
+            </div>
+            <p class="text-xs text-gray-400">Jan 14, 2024 • 2:30 PM</p>
+        </div>
+        <div class="velox-card p-4">
+            <div class="flex justify-between mb-2">
+                <span class="font-bold">Withdrawal ₹5,000</span>
+                <span class="text-red-400 font-bold">-₹5,000</span>
+            </div>
+            <p class="text-xs text-gray-400">Jan 13, 2024 • 1:15 PM</p>
+        </div>
+    </div>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div id="screen-settings" class="screen pt-20 px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Settings</h2>
+
+    <div class="velox-card overflow-hidden">
+        <div class="list-item" onclick="navScreen('subscription')">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-wallet text-yellow-400"></i> <span>Subscription</span>
+            </div>
+            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
+        </div>
+        <div class="list-item" onclick="navScreen('automode')">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-robot text-yellow-400"></i> <span>Auto-Trade Mode</span>
+            </div>
+            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
+        </div>
+        <div class="list-item" onclick="navScreen('general')">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-cog text-yellow-400"></i> <span>General</span>
+            </div>
+            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
+        </div>
+        <div class="list-item" onclick="navScreen('display')">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-palette text-yellow-400"></i> <span>Display</span>
+            </div>
+            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
+        </div>
+        <div class="list-item" onclick="navScreen('sound')">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-volume-up text-yellow-400"></i> <span>Sound</span>
+            </div>
+            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
+        </div>
+        <div class="list-item" onclick="navScreen('brokers')">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-link text-yellow-400"></i> <span>Link Brokers</span>
+            </div>
+            <i class="fas fa-chevron-right text-xs text-gray-500"></i>
+        </div>
+    </div>
+
+    <p class="text-center text-[10px] text-gray-500 mt-6">VeloxTrade AI v4.0.0 (Build 2026)</p>
+</div>
+
+<!-- SUBSCRIPTION SETTINGS -->
+<div id="screen-subscription" class="screen pt-20 px-4 pb-24 space-y-4">
+    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
+    <h2 class="text-2xl font-bold">Subscription</h2>
+    
+    <div class="velox-card p-6 text-center border-2 border-yellow-400">
+        <i class="fas fa-crown text-4xl text-yellow-400 mb-2"></i>
+        <h3 class="text-xl font-bold">PRO TRADER</h3>
+        <p class="text-gray-400 mb-4">Valid till: 30 Dec 2026</p>
+        <button class="w-full py-3 bg-white/10 rounded border border-white/20 mb-2 font-bold">RENEW PLAN</button>
+        <button class="w-full py-3 bg-white/10 rounded border border-white/20 font-bold">UPGRADE PLAN</button>
+    </div>
+
+    <h3 class="font-bold mt-6">Deposit / Withdraw</h3>
+    <div class="flex gap-3">
+        <button class="flex-1 velox-card p-4 text-center hover:bg-white/5">
+            <i class="fas fa-arrow-down text-green-400 text-lg mb-1"></i>
+            <p class="text-xs font-bold">Deposit Funds</p>
+        </button>
+        <button class="flex-1 velox-card p-4 text-center hover:bg-white/5">
+            <i class="fas fa-arrow-up text-red-400 text-lg mb-1"></i>
+            <p class="text-xs font-bold">Withdraw</p>
+        </button>
+    </div>
 </div>
 
 <!-- AUTO-TRADE MODE -->
@@ -693,36 +841,70 @@ body {
     </div>
 </div>
 
-<!-- SUPPORT -->
-<div id="screen-support" class="screen pt-20 px-4 pb-24 space-y-4">
+<!-- BROKER LINKING SCREEN -->
+<div id="screen-brokers" class="screen pt-20 px-4 pb-24 space-y-4">
     <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Help & Support</h2>
+    <h2 class="text-2xl font-bold">Link Brokers</h2>
+    
+    <p class="text-xs text-gray-400 mb-4">Connect your trading accounts to execute trades directly from Velox</p>
+
     <div class="space-y-3">
         <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
-            <i class="fas fa-comments text-yellow-400 text-lg"></i>
-            <div>
-                <p class="font-bold">Live Chat Support</p>
-                <p class="text-xs text-gray-400">Get help instantly</p>
+            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">Z</div>
+            <div class="flex-1">
+                <p class="font-bold">Zerodha</p>
+                <p class="text-xs text-gray-400">Connect Kite Account</p>
             </div>
+            <i class="fas fa-chevron-right text-gray-500"></i>
         </button>
         <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
-            <i class="fas fa-book text-yellow-400 text-lg"></i>
-            <div>
-                <p class="font-bold">Knowledge Base</p>
-                <p class="text-xs text-gray-400">View FAQs & guides</p>
+            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold">G</div>
+            <div class="flex-1">
+                <p class="font-bold">Groww</p>
+                <p class="text-xs text-gray-400">Connect Groww Account</p>
             </div>
+            <i class="fas fa-chevron-right text-gray-500"></i>
         </button>
         <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
-            <i class="fas fa-envelope text-yellow-400 text-lg"></i>
-            <div>
-                <p class="font-bold">Email Support</p>
-                <p class="text-xs text-gray-400">support@velox.ai</p>
+            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold">U</div>
+            <div class="flex-1">
+                <p class="font-bold">Upstox</p>
+                <p class="text-xs text-gray-400">Connect Upstox Account</p>
             </div>
+            <i class="fas fa-chevron-right text-gray-500"></i>
+        </button>
+        <button class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
+            <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold">A</div>
+            <div class="flex-1">
+                <p class="font-bold">Angel One</p>
+                <p class="text-xs text-gray-400">Connect Angel Account</p>
+            </div>
+            <i class="fas fa-chevron-right text-gray-500"></i>
         </button>
     </div>
 </div>
 
 </div>
+
+<!-- BOTTOM NAVIGATION -->
+<nav class="bottom-nav">
+    <button class="nav-tab active" onclick="switchBottomTab('stocks')">
+        <i class="fas fa-chart-line"></i>
+        <span>Stocks</span>
+    </button>
+    <button class="nav-tab" onclick="switchBottomTab('fo')">
+        <i class="fas fa-chess"></i>
+        <span>F&O</span>
+    </button>
+    <button class="nav-tab" onclick="switchBottomTab('mf')">
+        <i class="fas fa-briefcase"></i>
+        <span>Funds</span>
+    </button>
+    <button class="nav-tab" onclick="switchBottomTab('upi')">
+        <i class="fas fa-mobile"></i>
+        <span>UPI</span>
+    </button>
+</nav>
 
 <!-- TRADE POPUP -->
 <div id="trade-popup" class="popup">
@@ -766,8 +948,12 @@ body {
 </div>
 
 <script>
-const API_URL = "https://velox-backend.velox-trade-ai.workers.dev";
+const CONFIG = {
+    API_URL: "https://velox-backend.velox-trade-ai.workers.dev",
+    SOUND_ENABLED: true,
+};
 
+// AUTH FUNCTIONS
 function switchAuthTab(tab) {
     document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
     document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
@@ -777,14 +963,15 @@ function switchAuthTab(tab) {
     document.getElementById('signup-tab').classList.toggle('text-gray-400', tab !== 'signup');
 }
 
-function handleLogin() {
+function appLogin() {
     const user = document.getElementById('login-user').value;
     const pass = document.getElementById('login-pass').value;
-    if(!user || !pass) { alert("Please fill all fields"); return; }
+    if(!user || !pass) { alert("Sab fields fill karo"); return; }
     
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-main').classList.remove('hidden');
     updateMarketStatus();
+    playSound('success');
 }
 
 function handleSignup() {
@@ -792,16 +979,23 @@ function handleSignup() {
     switchAuthTab('login');
 }
 
-function logout() {
-    if(confirm("Logout from terminal?")) location.reload();
+function appLogout() {
+    if(confirm("Terminal se logout karega?")) location.reload();
 }
 
+// NAVIGATION
 function navScreen(screen) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById('screen-' + screen);
     if(el) el.classList.add('active');
     toggleSidebar();
     window.scrollTo(0, 0);
+}
+
+function switchBottomTab(tab) {
+    navScreen(tab);
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    event.target.closest('.nav-tab').classList.add('active');
 }
 
 function toggleSidebar() {
@@ -812,7 +1006,6 @@ function toggleSidebar() {
 function updateMarketStatus() {
     const now = new Date();
     const hour = now.getHours();
-    const minute = now.getMinutes();
     const isOpen = hour >= 9 && hour < 16 && now.getDay() !== 0 && now.getDay() !== 6;
     
     if(isOpen) {
@@ -823,7 +1016,8 @@ function updateMarketStatus() {
     }
 }
 
-function runScanner() {
+// SCANNER LOGIC
+async function runScanner() {
     const btn = document.getElementById('scanner-btn');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING...';
     
@@ -833,17 +1027,14 @@ function runScanner() {
             type: 'BUY',
             entry: '48,200',
             stoploss: '48,150',
-            targets: ['48,300', '48,450'],
+            targets: ['48,300'],
             confidence: '88%'
         });
         btn.innerHTML = '<i class="fas fa-radar"></i> START SCANNING';
     }, 2000);
 }
 
-function runScreener() {
-    alert("Screener will analyze all stocks and show results shortly...");
-}
-
+// POPUP FUNCTIONS
 function showPopup(data) {
     document.getElementById('pop-symbol').textContent = data.symbol;
     document.getElementById('pop-type').textContent = data.type + ' SIGNAL';
@@ -852,7 +1043,7 @@ function showPopup(data) {
     document.getElementById('pop-tgt').textContent = data.targets[0];
     document.getElementById('pop-conf').textContent = data.confidence + ' High Probability';
     
-    playAlertSound();
+    playSound('alert');
     document.getElementById('trade-popup').classList.add('show');
 }
 
@@ -865,18 +1056,39 @@ function executeTrade() {
     closePopup();
 }
 
-function playAlertSound() {
+function copyRefer() {
+    const code = document.getElementById('refer-code').value;
+    navigator.clipboard.writeText(code);
+    alert("Referral code copied!");
+}
+
+// SOUND SYSTEM
+function playSound(type) {
+    if (!CONFIG.SOUND_ENABLED) return;
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0, ctx.currentTime + 0.3);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
+
+    if (type === 'success') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(500, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    } 
+    else if (type === 'alert') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(440, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    }
 }
 
 function toggleSwitch(el) {
@@ -884,7 +1096,7 @@ function toggleSwitch(el) {
 }
 
 updateMarketStatus();
-setInterval(updateMarketStatus, 1000);
+setInterval(updateMarketStatus, 60000);
 </script>
 
 </body>
