@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VeloxTrade Pro - Live Terminal</title>
+<title>VeloxTrade Pro - Algo Trading Terminal</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -42,6 +42,7 @@ body {
 }
 
 .btn-gold:active { transform: scale(0.95); }
+.btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .input-box {
     background: rgba(0,0,0,0.3);
@@ -129,6 +130,20 @@ body {
 }
 
 .toggle-switch.on::after { left: 24px; }
+
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.live-badge {
+    display: inline-block;
+    background: #10b981;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: bold;
+    animation: pulse 1.5s infinite;
+}
 </style>
 </head>
 
@@ -141,7 +156,7 @@ body {
             <i class="fas fa-bolt text-5xl text-black"></i>
         </div>
         <h1 class="text-5xl font-black italic tracking-wider text-white">VELOX<span class="text-yellow-400">TRADE</span></h1>
-        <p class="text-teal-400 text-xs mt-2 tracking-[0.4em] font-bold">ALGO TRADING TERMINAL</p>
+        <p class="text-teal-400 text-xs mt-2 tracking-[0.4em] font-bold">AI ALGO TRADING TERMINAL</p>
     </div>
 
     <div class="velox-card p-6">
@@ -199,22 +214,19 @@ body {
         </div>
 
         <nav class="space-y-2">
-            <button onclick="navScreen('profile'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
-                <i class="fas fa-user-circle text-yellow-400 w-5"></i> My Profile
+            <button onclick="navScreen('scanner')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
+                <i class="fas fa-crosshairs text-yellow-400 w-5"></i> Scanner
             </button>
-            <button onclick="navScreen('holdings'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
+            <button onclick="navScreen('holdings')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
                 <i class="fas fa-chart-line text-yellow-400 w-5"></i> Holdings
             </button>
-            <button onclick="navScreen('orders'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
+            <button onclick="navScreen('orders')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
                 <i class="fas fa-exchange-alt text-yellow-400 w-5"></i> Orders
             </button>
-            <button onclick="navScreen('account'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
-                <i class="fas fa-credit-card text-yellow-400 w-5"></i> Account
+            <button onclick="navScreen('brokers')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
+                <i class="fas fa-link text-yellow-400 w-5"></i> Link Brokers
             </button>
-            <button onclick="navScreen('reports'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
-                <i class="fas fa-file-alt text-yellow-400 w-5"></i> Reports
-            </button>
-            <button onclick="navScreen('settings'); toggleSidebar()" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
+            <button onclick="navScreen('settings')" class="w-full text-left p-3 rounded-lg hover:bg-white/5 flex items-center gap-3">
                 <i class="fas fa-cog text-yellow-400 w-5"></i> Settings
             </button>
         </nav>
@@ -226,18 +238,42 @@ body {
     </div>
 </div>
 
-<!-- STOCKS SCREEN (HOME) -->
-<div id="screen-stocks" class="screen active px-4 pb-24 space-y-4">
-    <div class="grid grid-cols-2 gap-3">
+<!-- HOME SCREEN -->
+<div id="screen-scanner" class="screen active px-4 pb-24 space-y-4">
+    <div class="grid grid-cols-2 gap-3 pt-2">
         <div class="velox-card p-3 border-l-4 border-green-500">
             <span class="text-[9px] text-gray-400 uppercase font-bold">NIFTY 50</span>
             <div id="nifty-price" class="text-xl font-bold">21,450.60</div>
-            <div id="nifty-change" class="text-xs text-green-400 font-bold"><i class="fas fa-caret-up"></i> 120.50 (0.6%)</div>
+            <div id="nifty-change" class="text-xs text-green-400 font-bold"><i class="fas fa-caret-up"></i> 120.50</div>
         </div>
         <div class="velox-card p-3 border-l-4 border-red-500">
             <span class="text-[9px] text-gray-400 uppercase font-bold">BANK NIFTY</span>
             <div id="banknifty-price" class="text-xl font-bold">47,800.20</div>
-            <div id="banknifty-change" class="text-xs text-red-400 font-bold"><i class="fas fa-caret-down"></i> 80.20 (0.2%)</div>
+            <div id="banknifty-change" class="text-xs text-red-400 font-bold"><i class="fas fa-caret-down"></i> 80.20</div>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="velox-card p-4">
+        <h3 class="font-bold text-yellow-400 mb-3">STOCK FILTER</h3>
+        <div class="space-y-2">
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">PRICE RANGE</label>
+                <div class="flex gap-2">
+                    <button onclick="setPriceFilter('low')" class="flex-1 py-2 rounded bg-white/10 hover:bg-blue-500/30 text-xs font-bold">LOW <br> &lt;₹500</button>
+                    <button onclick="setPriceFilter('mid')" class="flex-1 py-2 rounded bg-white/10 hover:bg-purple-500/30 text-xs font-bold">MID <br> ₹500-2K</button>
+                    <button onclick="setPriceFilter('high')" class="flex-1 py-2 rounded bg-white/10 hover:bg-green-500/30 text-xs font-bold">HIGH <br> &gt;₹2K</button>
+                </div>
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">SETUP TYPE</label>
+                <select id="setup-filter" class="input-box w-full p-2 text-xs">
+                    <option value="all">All Setups</option>
+                    <option value="breakout">Breakout</option>
+                    <option value="support">Support Retest</option>
+                    <option value="volume">Volume Spike</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -246,95 +282,16 @@ body {
             <i class="fas fa-robot text-6xl"></i>
         </div>
         <h3 class="font-bold text-lg text-yellow-400 mb-1">AI OPPORTUNITY SCANNER</h3>
-        <p class="text-xs text-gray-300 mb-4">Auto-detects 80-90% accuracy setups using Price Action & Volume.</p>
-        <button onclick="runScanner()" class="btn-gold w-full py-3 rounded-xl flex justify-center items-center gap-2">
+        <p class="text-xs text-gray-300 mb-4">80-90% Accuracy | Real-time Monitoring</p>
+        <button id="scanner-btn" onclick="runScanner()" class="btn-gold w-full py-3 rounded-xl flex justify-center items-center gap-2">
             <i class="fas fa-radar"></i> START SCANNING
         </button>
     </div>
 
-    <div class="space-y-2">
-        <h4 class="font-bold text-sm text-gray-400">PORTFOLIO STATS</h4>
-        <div class="velox-card p-4 bg-gradient-to-r from-yellow-600/20 to-transparent">
-            <p class="text-xs text-gray-300 uppercase font-bold">Total P&L</p>
-            <h2 id="pnl-amount" class="text-3xl font-black text-green-400">+₹4,250.00</h2>
-            <p id="pnl-details" class="text-[10px] text-gray-400">Invested: ₹45,000 | Current: ₹49,250</p>
-        </div>
+    <!-- Active Signals -->
+    <div id="active-signals" class="space-y-3">
+        <h4 class="font-bold text-sm text-gray-400">LIVE SIGNALS</h4>
     </div>
-
-    <div class="velox-card p-0 overflow-hidden">
-        <div class="bg-black/40 p-3 border-b border-white/10 flex justify-between">
-            <h4 class="font-bold text-sm">YOUR HOLDINGS</h4>
-            <span class="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded">LIVE</span>
-        </div>
-        <div id="holdings-quick" class="p-3 space-y-3">
-            <div class="flex justify-between">
-                <div>
-                    <div class="font-bold text-sm">SBIN</div>
-                    <div class="text-[10px] text-gray-400">Qty: 50</div>
-                </div>
-                <div class="text-right">
-                    <div class="font-bold text-green-400">₹624.00</div>
-                    <div class="text-[10px] text-green-400">+1.2%</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- F&O SCREEN -->
-<div id="screen-fo" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold">F&O - Futures & Options</h2>
-    <div class="velox-card p-4">
-        <p class="text-gray-400">No active F&O positions</p>
-    </div>
-</div>
-
-<!-- MUTUAL FUNDS SCREEN -->
-<div id="screen-mf" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold">Mutual Funds</h2>
-    <div class="velox-card p-4">
-        <p class="text-gray-400">No mutual funds purchased</p>
-    </div>
-</div>
-
-<!-- UPI SCREEN -->
-<div id="screen-upi" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold">UPI & Payment</h2>
-    <div class="velox-card p-4">
-        <p class="text-gray-400">Payment features coming soon</p>
-    </div>
-</div>
-
-<!-- PROFILE SCREEN -->
-<div id="screen-profile" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">My Profile</h2>
-    <div class="velox-card p-6 text-center border-2 border-yellow-400">
-        <div class="w-16 h-16 bg-yellow-400 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-black text-black" id="profile-initials">VU</div>
-        <h3 id="profile-name" class="text-xl font-bold">Velox User</h3>
-        <p class="text-xs text-yellow-400">Pro Plan Active <i class="fas fa-crown"></i></p>
-        <p class="text-xs text-gray-400 mt-2">ID: VX-99281</p>
-    </div>
-
-    <div class="velox-card p-4 space-y-3">
-        <div class="flex justify-between pb-3 border-b border-white/10">
-            <span class="text-gray-400">Email</span>
-            <span id="profile-email" class="font-bold">user@velox.ai</span>
-        </div>
-        <div class="flex justify-between pb-3 border-b border-white/10">
-            <span class="text-gray-400">Mobile</span>
-            <span id="profile-mobile" class="font-bold">+91 9876543210</span>
-        </div>
-        <div class="flex justify-between pb-3 border-b border-white/10">
-            <span class="text-gray-400">PAN</span>
-            <span class="font-mono text-xs font-bold">ABCD1234E</span>
-        </div>
-        <div class="flex justify-between">
-            <span class="text-gray-400">Member Since</span>
-            <span class="font-bold">01 Jan 2024</span>
-        </div>
-    </div>
-
-    <button onclick="editProfile()" class="btn-gold w-full py-3 rounded-xl">EDIT PROFILE</button>
 </div>
 
 <!-- HOLDINGS SCREEN -->
@@ -346,193 +303,29 @@ body {
         <p class="text-[10px] text-gray-400">2 stocks held</p>
     </div>
 
-    <div id="holdings-list" class="velox-card p-0 overflow-hidden">
-        <div class="p-4 border-b border-white/5">
-            <div class="flex justify-between">
-                <h4 class="font-bold">SBIN</h4>
-                <span class="text-green-400 font-bold">+₹1,200</span>
-            </div>
-            <div class="flex justify-between text-xs mt-1 text-gray-400">
-                <span>Qty: 50 | Avg: 600</span>
-                <span class="text-white">LTP: 624.00</span>
-            </div>
-        </div>
-        <div class="p-4">
-            <div class="flex justify-between">
-                <h4 class="font-bold">ITC</h4>
-                <span class="text-green-400 font-bold">+₹3,050</span>
-            </div>
-            <div class="flex justify-between text-xs mt-1 text-gray-400">
-                <span>Qty: 200 | Avg: 400</span>
-                <span class="text-white">LTP: 415.25</span>
-            </div>
-        </div>
+    <div id="holdings-list" class="velox-card p-0 overflow-hidden space-y-0">
+        <!-- Holdings will be populated here -->
     </div>
 </div>
 
 <!-- ORDERS SCREEN -->
 <div id="screen-orders" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">Orders</h2>
+    <h2 class="text-2xl font-bold mb-4">Active Orders</h2>
     
-    <div class="flex bg-black/30 p-1 rounded-lg gap-1">
-        <button class="flex-1 py-2 text-xs font-bold bg-yellow-400 text-black rounded">OPEN</button>
-        <button class="flex-1 py-2 text-xs font-bold text-gray-400">EXECUTED</button>
-        <button class="flex-1 py-2 text-xs font-bold text-gray-400">CANCELLED</button>
-    </div>
-
     <div id="orders-list" class="space-y-3">
-        <div class="velox-card p-3 border-l-4 border-blue-500">
-            <div class="flex justify-between mb-2">
-                <span class="bg-blue-500/20 text-blue-400 text-[10px] px-2 rounded font-bold">BUY LIMIT</span>
-                <span class="text-[10px] text-gray-400">10:45 AM</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold">TATASTEEL</h3>
-                <span class="font-bold">Qty: 100</span>
-            </div>
-            <div class="flex justify-between items-center mt-1">
-                <span class="text-xs text-gray-400">Price: <span class="text-white font-bold">145.00</span></span>
-                <span class="text-xs text-yellow-400 font-bold">PENDING</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ACCOUNT SCREEN -->
-<div id="screen-account" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">Account Details</h2>
-    <div class="velox-card p-4 space-y-3">
-        <div class="flex justify-between pb-3 border-b border-white/10">
-            <span class="text-gray-400">User ID</span>
-            <span class="font-bold">VX-99281</span>
-        </div>
-        <div class="flex justify-between pb-3 border-b border-white/10">
-            <span class="text-gray-400">Account Type</span>
-            <span class="font-bold text-yellow-400">PRO TRADER</span>
-        </div>
-        <div class="flex justify-between pb-3 border-b border-white/10">
-            <span class="text-gray-400">Status</span>
-            <span class="font-bold text-green-400">Active <i class="fas fa-check-circle"></i></span>
-        </div>
-        <div class="flex justify-between">
-            <span class="text-gray-400">Member Since</span>
-            <span class="font-bold">01 Jan 2024</span>
-        </div>
-    </div>
-</div>
-
-<!-- REPORTS SCREEN -->
-<div id="screen-reports" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">Reports & Transactions</h2>
-    
-    <div class="flex gap-2 mb-4">
-        <button class="flex-1 py-2 px-3 bg-yellow-400 text-black text-xs font-bold rounded">TRANSACTIONS</button>
-        <button class="flex-1 py-2 px-3 bg-white/10 text-gray-400 text-xs font-bold rounded">TAX</button>
-    </div>
-
-    <div id="transactions-list" class="space-y-3">
-        <div class="velox-card p-4">
-            <div class="flex justify-between mb-2">
-                <span class="font-bold">Deposit ₹10,000</span>
-                <span class="text-green-400 font-bold">+₹10,000</span>
-            </div>
-            <p class="text-xs text-gray-400">Jan 15, 2024 • 3:45 PM</p>
-        </div>
-        <div class="velox-card p-4">
-            <div class="flex justify-between mb-2">
-                <span class="font-bold">Profit on SBIN</span>
-                <span class="text-green-400 font-bold">+₹1,200</span>
-            </div>
-            <p class="text-xs text-gray-400">Jan 14, 2024 • 2:30 PM</p>
-        </div>
-    </div>
-</div>
-
-<!-- SETTINGS SCREEN -->
-<div id="screen-settings" class="screen px-4 pb-24 space-y-4">
-    <h2 class="text-2xl font-bold mb-4">Settings</h2>
-
-    <div class="velox-card overflow-hidden">
-        <div class="p-4 cursor-pointer hover:bg-white/5 border-b border-white/5 flex items-center gap-3" onclick="navScreen('subscription'); toggleSidebar()">
-            <i class="fas fa-wallet text-yellow-400"></i> <span>Subscription</span>
-            <i class="fas fa-chevron-right text-xs text-gray-500 ml-auto"></i>
-        </div>
-        <div class="p-4 cursor-pointer hover:bg-white/5 border-b border-white/5 flex items-center gap-3" onclick="navScreen('automode'); toggleSidebar()">
-            <i class="fas fa-robot text-yellow-400"></i> <span>Auto-Trade</span>
-            <i class="fas fa-chevron-right text-xs text-gray-500 ml-auto"></i>
-        </div>
-        <div class="p-4 cursor-pointer hover:bg-white/5 border-b border-white/5 flex items-center gap-3" onclick="navScreen('general'); toggleSidebar()">
-            <i class="fas fa-cog text-yellow-400"></i> <span>General</span>
-            <i class="fas fa-chevron-right text-xs text-gray-500 ml-auto"></i>
-        </div>
-        <div class="p-4 cursor-pointer hover:bg-white/5 flex items-center gap-3" onclick="navScreen('brokers'); toggleSidebar()">
-            <i class="fas fa-link text-yellow-400"></i> <span>Link Brokers</span>
-            <i class="fas fa-chevron-right text-xs text-gray-500 ml-auto"></i>
-        </div>
-    </div>
-</div>
-
-<!-- SUBSCRIPTION -->
-<div id="screen-subscription" class="screen px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Subscription</h2>
-    <div class="velox-card p-6 text-center border-2 border-yellow-400">
-        <i class="fas fa-crown text-4xl text-yellow-400 mb-2"></i>
-        <h3 class="text-xl font-bold">PRO TRADER</h3>
-        <p class="text-gray-400 mb-4">Valid till: 30 Dec 2026</p>
-        <button onclick="simulateDeposit()" class="w-full py-3 bg-green-500 text-black rounded font-bold mb-2">+ DEPOSIT FUNDS</button>
-        <button onclick="simulateWithdraw()" class="w-full py-3 bg-red-500 text-black rounded font-bold">- WITHDRAW</button>
-    </div>
-</div>
-
-<!-- AUTO-TRADE MODE -->
-<div id="screen-automode" class="screen px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Auto-Trade Mode</h2>
-    <div class="velox-card p-4 space-y-4">
-        <div class="flex justify-between items-center">
-            <span class="font-bold">Enable Auto-Buy</span>
-            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="font-bold">Enable Auto-SL</span>
-            <div class="toggle-switch on" onclick="toggleSwitch(this)"></div>
-        </div>
-        <div>
-            <label class="text-xs text-gray-400">Max Loss</label>
-            <input class="input-box w-full p-2 mt-1" value="1000">
-        </div>
-    </div>
-</div>
-
-<!-- GENERAL SETTINGS -->
-<div id="screen-general" class="screen px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">General Settings</h2>
-    <div class="velox-card p-4 space-y-4">
-        <div>
-            <label class="text-xs text-gray-400 block mb-2">Language</label>
-            <select class="input-box w-full p-2">
-                <option>English</option>
-                <option>Hindi</option>
-            </select>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="font-bold">Push Notifications</span>
-            <div class="toggle-switch on" onclick="toggleSwitch(this)"></div>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="font-bold">Sound Alerts</span>
-            <div class="toggle-switch on" onclick="toggleSwitch(this)"></div>
-        </div>
+        <!-- Orders will be populated here -->
     </div>
 </div>
 
 <!-- BROKER LINKING -->
 <div id="screen-brokers" class="screen px-4 pb-24 space-y-4">
-    <button onclick="navScreen('settings')" class="text-yellow-400 font-bold mb-4"><i class="fas fa-arrow-left"></i> Back</button>
-    <h2 class="text-2xl font-bold">Link Brokers</h2>
-    <p class="text-xs text-gray-400 mb-4">Connect your trading accounts</p>
+    <h2 class="text-2xl font-bold mb-4">Link Trading Brokers</h2>
+    <p class="text-xs text-gray-400 mb-4">Connect your broker account for direct execution</p>
+
+    <div id="linked-brokers" class="mb-6">
+        <h4 class="font-bold text-sm text-yellow-400 mb-2">Connected Brokers</h4>
+        <div id="broker-list" class="space-y-2"></div>
+    </div>
 
     <div class="space-y-3">
         <button onclick="linkBroker('zerodha')" class="velox-card p-4 w-full text-left flex items-center gap-3 hover:bg-white/5">
@@ -566,35 +359,62 @@ body {
     </div>
 </div>
 
+<!-- SETTINGS SCREEN -->
+<div id="screen-settings" class="screen px-4 pb-24 space-y-4">
+    <h2 class="text-2xl font-bold mb-4">Settings</h2>
+
+    <div class="velox-card overflow-hidden">
+        <div class="p-4 border-b border-white/5 flex items-center gap-3 justify-between">
+            <div>
+                <p class="font-bold">Sound Alerts</p>
+                <p class="text-xs text-gray-400">Enable/disable audio notifications</p>
+            </div>
+            <div class="toggle-switch on" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="p-4 border-b border-white/5 flex items-center gap-3 justify-between">
+            <div>
+                <p class="font-bold">Push Notifications</p>
+                <p class="text-xs text-gray-400">Get real-time alerts</p>
+            </div>
+            <div class="toggle-switch on" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="p-4 flex items-center gap-3 justify-between">
+            <div>
+                <p class="font-bold">Auto-Execute Trades</p>
+                <p class="text-xs text-gray-400">Execute orders automatically</p>
+            </div>
+            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+        </div>
+    </div>
+
+    <div class="velox-card p-4">
+        <h4 class="font-bold mb-3">Default Risk Settings</h4>
+        <div class="space-y-3">
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">Max Loss per Trade (₹)</label>
+                <input class="input-box w-full p-2" type="number" value="1000">
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 block mb-1">Position Size</label>
+                <select class="input-box w-full p-2">
+                    <option>Conservative (1 Lot)</option>
+                    <option>Moderate (2 Lots)</option>
+                    <option>Aggressive (5 Lots)</option>
+                </select>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- BOTTOM NAVIGATION -->
-<nav class="bottom-nav">
-    <button class="nav-tab active" onclick="switchBottomTab('stocks')">
-        <i class="fas fa-chart-line"></i>
-        <span>Stocks</span>
-    </button>
-    <button class="nav-tab" onclick="switchBottomTab('fo')">
-        <i class="fas fa-chess"></i>
-        <span>F&O</span>
-    </button>
-    <button class="nav-tab" onclick="switchBottomTab('mf')">
-        <i class="fas fa-briefcase"></i>
-        <span>Funds</span>
-    </button>
-    <button class="nav-tab" onclick="switchBottomTab('upi')">
-        <i class="fas fa-mobile"></i>
-        <span>UPI</span>
-    </button>
-</nav>
+</div>
 
 <!-- TRADE POPUP -->
 <div id="trade-popup" class="popup">
     <div class="bg-[#002b2b] border-t-4 border-yellow-400 rounded-t-3xl p-6">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h2 id="pop-symbol" class="text-3xl font-black text-white">BANKNIFTY</h2>
-                <p id="pop-type" class="text-xs text-gray-400 mt-1">🟢 BUY CALL</p>
+                <h2 id="pop-symbol" class="text-3xl font-black text-white">SBIN</h2>
+                <p id="pop-type" class="text-xs text-gray-400 mt-1">🟢 BUY SETUP</p>
             </div>
             <button onclick="closePopup()" class="text-2xl text-gray-400"><i class="fas fa-times"></i></button>
         </div>
@@ -602,15 +422,26 @@ body {
         <div class="grid grid-cols-3 gap-2 mb-6">
             <div class="bg-black/40 p-3 rounded-lg text-center border border-yellow-400/30">
                 <p class="text-[10px] text-gray-400 font-bold">ENTRY</p>
-                <p id="pop-entry" class="font-bold text-lg text-white">48,200</p>
+                <p id="pop-entry" class="font-bold text-lg text-white">600.00</p>
             </div>
             <div class="bg-black/40 p-3 rounded-lg text-center border border-red-500/30">
                 <p class="text-[10px] text-red-400 font-bold">SL</p>
-                <p id="pop-sl" class="font-bold text-lg text-red-400">48,150</p>
+                <p id="pop-sl" class="font-bold text-lg text-red-400">590.00</p>
             </div>
             <div class="bg-black/40 p-3 rounded-lg text-center border border-green-500/30">
-                <p class="text-[10px] text-green-400 font-bold">TGT</p>
-                <p id="pop-tgt" class="font-bold text-lg text-green-400">48,300</p>
+                <p class="text-[10px] text-green-400 font-bold">TARGET</p>
+                <p id="pop-tgt" class="font-bold text-lg text-green-400">620.00</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="bg-black/40 p-3 rounded-lg text-center">
+                <p class="text-[9px] text-gray-400 font-bold">RISK:REWARD</p>
+                <p class="font-bold text-yellow-400 text-lg" id="pop-ratio">1:2</p>
+            </div>
+            <div class="bg-black/40 p-3 rounded-lg text-center">
+                <p class="text-[9px] text-gray-400 font-bold">WIN CHANCE</p>
+                <p class="font-bold text-green-400 text-lg" id="pop-conf">88%</p>
             </div>
         </div>
 
@@ -619,7 +450,10 @@ body {
             <div class="w-full bg-black/50 rounded-full h-2">
                 <div id="pop-confidence-bar" class="bg-green-500 h-2 rounded-full" style="width: 88%"></div>
             </div>
-            <p id="pop-conf" class="text-xs text-gray-400 mt-1">88% High Probability</p>
+        </div>
+
+        <div id="pop-setup-info" class="bg-black/40 p-3 rounded-lg mb-6 text-xs text-gray-300">
+            <!-- Setup info will be populated -->
         </div>
 
         <div class="flex gap-2">
@@ -629,41 +463,77 @@ body {
     </div>
 </div>
 
+</div>
+
+<!-- BOTTOM NAVIGATION -->
+<nav class="bottom-nav">
+    <button class="nav-tab active" onclick="switchBottomTab('scanner')">
+        <i class="fas fa-crosshairs"></i>
+        <span>Scanner</span>
+    </button>
+    <button class="nav-tab" onclick="switchBottomTab('holdings')">
+        <i class="fas fa-chart-line"></i>
+        <span>Holdings</span>
+    </button>
+    <button class="nav-tab" onclick="switchBottomTab('orders')">
+        <i class="fas fa-exchange-alt"></i>
+        <span>Orders</span>
+    </button>
+    <button class="nav-tab" onclick="switchBottomTab('brokers')">
+        <i class="fas fa-link"></i>
+        <span>Brokers</span>
+    </button>
+</nav>
+
 <script>
-// ============ STATE MANAGEMENT ============
-let userState = {
-    userId: 'user@velox',
-    userName: 'Velox User',
-    email: 'user@velox.ai',
-    mobile: '+91 9876543210',
-    balance: 50000,
+// ============================================
+// STATE MANAGEMENT
+// ============================================
+
+let appState = {
     isLoggedIn: false,
+    user: {
+        id: null,
+        name: 'Velox User',
+        email: 'user@velox.ai',
+        balance: 50000
+    },
+    priceFilter: 'all',
+    setupFilter: 'all',
+    linkedBrokers: [],
     holdings: [
-        { symbol: 'SBIN', qty: 50, avgPrice: 600, currentPrice: 624, pnl: 1200 },
-        { symbol: 'ITC', qty: 200, avgPrice: 400, currentPrice: 415.25, pnl: 3050 }
+        { symbol: 'SBIN', qty: 50, entry: 600, current: 624, sl: 590, tgt: 640, pnl: 1200 },
+        { symbol: 'ITC', qty: 200, entry: 400, current: 415.25, sl: 390, tgt: 430, pnl: 3050 }
     ],
     orders: [
-        { id: 1, symbol: 'TATASTEEL', type: 'BUY', qty: 100, price: 145, status: 'PENDING', time: '10:45 AM' }
+        { id: 'ORD-001', symbol: 'RELIANCE', type: 'BUY', entry: 2550, sl: 2530, tgt: 2600, qty: 10, status: 'ACTIVE', time: '10:45 AM' }
     ],
-    transactions: [
-        { type: 'deposit', amount: 10000, date: 'Jan 15, 2024', time: '3:45 PM' },
-        { type: 'profit', amount: 1200, symbol: 'SBIN', date: 'Jan 14, 2024', time: '2:30 PM' }
-    ],
-    brokers: []
+    availableStocks: [
+        { symbol: 'SBIN', price: 624, range: 'low', setup: 'support', confidence: 87 },
+        { symbol: 'ITC', price: 415, range: 'low', setup: 'breakout', confidence: 85 },
+        { symbol: 'RELIANCE', price: 2550, range: 'high', setup: 'volume', confidence: 82 },
+        { symbol: 'TCS', price: 3520, range: 'high', setup: 'support', confidence: 88 },
+        { symbol: 'INFY', price: 1850, range: 'mid', setup: 'breakout', confidence: 86 },
+        { symbol: 'HDFCBANK', price: 1640, range: 'mid', setup: 'volume', confidence: 84 }
+    ]
 };
 
-// ============ AUTHENTICATION ============
+// ============================================
+// AUTHENTICATION
+// ============================================
+
 function appLogin() {
-    const user = document.getElementById('login-user').value;
-    const pass = document.getElementById('login-pass').value;
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value.trim();
     
     if (!user || !pass) {
         alert("❌ User ID aur Password fill karo");
         return;
     }
 
-    userState.isLoggedIn = true;
-    userState.userId = user;
+    appState.isLoggedIn = true;
+    appState.user.id = user;
+    appState.user.name = user.split('@')[0].toUpperCase().slice(0, 1) + 'U';
     
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-main').classList.remove('hidden');
@@ -682,145 +552,267 @@ function handleSignup() {
         return;
     }
     
-    userState.userName = name;
-    userState.email = email;
-    alert("✅ Account created! Ab login karo.");
+    appState.isLoggedIn = true;
+    appState.user.name = name;
+    appState.user.email = email;
+    
+    alert("✅ Account created! Login karo.");
     switchAuthTab('login');
 }
 
 function appLogout() {
     if (confirm("❓ Logout karega?")) {
-        userState.isLoggedIn = false;
+        appState.isLoggedIn = false;
         location.reload();
     }
 }
 
-// ============ UI UPDATES ============
-function updateAllUI() {
-    updateUserUI();
-    updateHoldingsUI();
-    updatePortfolioUI();
-}
+// ============================================
+// UI UPDATES
+// ============================================
 
-function updateUserUI() {
-    const initials = userState.userName.split(' ').map(n => n[0]).join('').toUpperCase();
+function updateAllUI() {
+    const initials = appState.user.name.split(' ').map(n => n[0]).join('').toUpperCase();
     
-    document.getElementById('header-user').textContent = userState.userName;
-    document.getElementById('header-balance').textContent = '₹' + userState.balance.toLocaleString('en-IN');
+    document.getElementById('header-user').textContent = appState.user.name;
+    document.getElementById('header-balance').textContent = '₹' + appState.user.balance.toLocaleString('en-IN');
     document.getElementById('header-initials').textContent = initials;
-    document.getElementById('sidebar-user').textContent = userState.userName;
+    document.getElementById('sidebar-user').textContent = appState.user.name;
     
-    document.getElementById('profile-name').textContent = userState.userName;
-    document.getElementById('profile-email').textContent = userState.email;
-    document.getElementById('profile-mobile').textContent = userState.mobile;
-    document.getElementById('profile-initials').textContent = initials;
+    updateHoldingsUI();
+    updateOrdersUI();
+    updateBrokerUI();
+    updateSignalsUI();
 }
 
 function updateHoldingsUI() {
     const list = document.getElementById('holdings-list');
-    const quick = document.getElementById('holdings-quick');
-    
     list.innerHTML = '';
-    quick.innerHTML = '';
     
-    userState.holdings.forEach(h => {
+    appState.holdings.forEach((h, i) => {
         const pnlColor = h.pnl >= 0 ? 'text-green-400' : 'text-red-400';
         const pnlSign = h.pnl >= 0 ? '+' : '';
+        const changePercent = ((h.current - h.entry) / h.entry * 100).toFixed(2);
         
         const html = `
-            <div class="p-4 ${h === userState.holdings[0] ? 'border-b border-white/5' : ''}">
-                <div class="flex justify-between">
-                    <h4 class="font-bold">${h.symbol}</h4>
-                    <span class="${pnlColor} font-bold">${pnlSign}₹${h.pnl.toLocaleString('en-IN')}</span>
+            <div class="p-4 ${i !== appState.holdings.length - 1 ? 'border-b border-white/5' : ''}">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-lg">${h.symbol}</h4>
+                    <span class="${pnlColor} font-bold text-sm">${pnlSign}₹${h.pnl.toLocaleString()}</span>
                 </div>
-                <div class="flex justify-between text-xs mt-1 text-gray-400">
-                    <span>Qty: ${h.qty} | Avg: ${h.avgPrice}</span>
-                    <span class="text-white">LTP: ${h.currentPrice}</span>
+                <div class="flex justify-between text-xs text-gray-400 mb-2">
+                    <span>Qty: ${h.qty} | Entry: ₹${h.entry}</span>
+                    <span class="text-white">LTP: ₹${h.current} (${changePercent}%)</span>
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1 bg-black/40 p-2 rounded text-center">
+                        <p class="text-[8px] text-red-400">SL</p>
+                        <p class="text-xs font-bold">₹${h.sl}</p>
+                    </div>
+                    <div class="flex-1 bg-black/40 p-2 rounded text-center">
+                        <p class="text-[8px] text-green-400">TGT</p>
+                        <p class="text-xs font-bold">₹${h.tgt}</p>
+                    </div>
                 </div>
             </div>
         `;
-        
         list.innerHTML += html;
-        if (h === userState.holdings[0]) {
-            quick.innerHTML = `
-                <div class="flex justify-between">
-                    <div>
-                        <div class="font-bold text-sm">${h.symbol}</div>
-                        <div class="text-[10px] text-gray-400">Qty: ${h.qty}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-green-400">₹${h.currentPrice}</div>
-                        <div class="text-[10px] text-green-400">+1.2%</div>
-                    </div>
-                </div>
-            `;
-        }
     });
-}
-
-function updatePortfolioUI() {
-    const totalInvested = userState.holdings.reduce((sum, h) => sum + (h.qty * h.avgPrice), 0);
-    const totalCurrent = userState.holdings.reduce((sum, h) => sum + (h.qty * h.currentPrice), 0);
-    const totalPnL = totalCurrent - totalInvested;
     
-    document.getElementById('pnl-amount').textContent = (totalPnL >= 0 ? '+' : '') + '₹' + totalPnL.toLocaleString('en-IN');
-    document.getElementById('pnl-details').textContent = `Invested: ₹${totalInvested.toLocaleString('en-IN')} | Current: ₹${totalCurrent.toLocaleString('en-IN')}`;
+    const totalPnL = appState.holdings.reduce((sum, h) => sum + h.pnl, 0);
     document.getElementById('holdings-pnl').textContent = (totalPnL >= 0 ? '+' : '') + '₹' + totalPnL.toLocaleString('en-IN');
 }
 
-// ============ MARKET STATUS ============
-function updateMarketStatus() {
+function updateOrdersUI() {
+    const list = document.getElementById('orders-list');
+    list.innerHTML = '';
+    
+    if (appState.orders.length === 0) {
+        list.innerHTML = '<div class="velox-card p-4 text-center text-gray-400">No active orders</div>';
+        return;
+    }
+    
+    appState.orders.forEach(o => {
+        const borderColor = o.type === 'BUY' ? 'border-blue-500' : 'border-red-500';
+        const typeColor = o.type === 'BUY' ? 'text-blue-400' : 'text-red-400';
+        
+        const html = `
+            <div class="velox-card p-3 border-l-4 ${borderColor}">
+                <div class="flex justify-between mb-2">
+                    <span class="bg-${o.type === 'BUY' ? 'blue' : 'red'}-500/20 ${typeColor} text-[10px] px-2 py-0.5 rounded font-bold">${o.type} ${o.symbol}</span>
+                    <span class="text-[10px] text-gray-400">${o.time}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1">
+                    <div class="text-center">
+                        <p class="text-[8px] text-gray-400">ENTRY</p>
+                        <p class="text-xs font-bold">₹${o.entry}</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[8px] text-red-400">SL</p>
+                        <p class="text-xs font-bold text-red-400">₹${o.sl}</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[8px] text-green-400">TGT</p>
+                        <p class="text-xs font-bold text-green-400">₹${o.tgt}</p>
+                    </div>
+                </div>
+                <div class="mt-2 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">Qty: ${o.qty}</span>
+                    <span class="text-xs font-bold text-yellow-400">${o.status}</span>
+                </div>
+            </div>
+        `;
+        list.innerHTML += html;
+    });
+}
+
+function updateBrokerUI() {
+    const list = document.getElementById('broker-list');
+    list.innerHTML = '';
+    
+    if (appState.linkedBrokers.length === 0) {
+        list.innerHTML = '<p class="text-xs text-gray-400">No brokers connected yet</p>';
+        return;
+    }
+    
+    appState.linkedBrokers.forEach(b => {
+        const html = `
+            <div class="velox-card p-3 flex items-center gap-2 justify-between">
+                <span class="font-bold text-sm">${b}</span>
+                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">CONNECTED</span>
+            </div>
+        `;
+        list.innerHTML += html;
+    });
+}
+
+function updateSignalsUI() {
+    const container = document.getElementById('active-signals');
+    const signals = appState.availableStocks.filter(s => {
+        if (appState.priceFilter !== 'all' && s.range !== appState.priceFilter) return false;
+        if (appState.setupFilter !== 'all' && s.setup !== appState.setupFilter) return false;
+        return true;
+    });
+    
+    if (signals.length === 0) {
+        container.innerHTML = '<div class="velox-card p-4 text-center text-gray-400">No signals match your filters</div>';
+        return;
+    }
+    
+    let html = '<h4 class="font-bold text-sm text-gray-400">LIVE SIGNALS</h4>';
+    signals.forEach(s => {
+        html += `
+            <div class="velox-card p-3 border-l-4 border-yellow-500 cursor-pointer hover:bg-white/5" onclick="showQuickSignal('${s.symbol}', ${s.price}, ${s.confidence})">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold">${s.symbol}</h4>
+                        <p class="text-xs text-gray-400">${s.setup.toUpperCase()} • ₹${s.price}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="live-badge">${s.confidence}%</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// ============================================
+// SCANNER & SIGNALS
+// ============================================
+
+function setPriceFilter(range) {
+    appState.priceFilter = range;
+    updateSignalsUI();
+}
+
+function runScanner() {
+    const btn = document.getElementById('scanner-btn');
     const now = new Date();
     const hour = now.getHours();
     const day = now.getDay();
     
-    const isOpen = hour >= 9 && hour < 16 && day !== 0 && day !== 6;
-    
-    const statusEl = document.getElementById('header-status');
-    if (isOpen) {
-        statusEl.innerHTML = '🟢 LIVE MARKET';
-        statusEl.classList.remove('text-red-400');
-        statusEl.classList.add('text-green-400');
-    } else {
-        statusEl.innerHTML = '🔴 MARKET CLOSED';
-        statusEl.classList.remove('text-green-400');
-        statusEl.classList.add('text-red-400');
+    if (day === 0 || day === 6 || hour < 9 || hour >= 16) {
+        alert("⏰ Scanner 9:15 AM - 3:30 PM IST (Mon-Fri only)");
+        return;
     }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING...';
+    playSound('tick');
+    
+    setTimeout(() => {
+        const stocks = appState.availableStocks.filter(s => {
+            if (appState.priceFilter !== 'all' && s.range !== appState.priceFilter) return false;
+            if (appState.setupFilter !== 'all' && s.setup !== appState.setupFilter) return false;
+            return true;
+        });
+        
+        if (stocks.length === 0) {
+            alert("📊 Filter ke anusar koi setup nahi mila");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-radar"></i> START SCANNING';
+            return;
+        }
+        
+        const signal = stocks[Math.floor(Math.random() * stocks.length)];
+        const entry = signal.price;
+        const sl = entry * 0.98;
+        const target = entry * 1.03;
+        
+        showPopup({
+            symbol: signal.symbol,
+            type: 'BUY',
+            entry: entry.toFixed(2),
+            sl: sl.toFixed(2),
+            target: target.toFixed(2),
+            confidence: signal.confidence,
+            setup: signal.setup
+        });
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-radar"></i> START SCANNING';
+        playSound('alert');
+    }, 1500);
 }
 
-// ============ SCANNER LOGIC ============
-function runScanner() {
-    const signals = [
-        { symbol: 'BANKNIFTY', type: 'BUY', entry: 48200, sl: 48150, target: 48300, confidence: 88 },
-        { symbol: 'NIFTY', type: 'BUY', entry: 21450, sl: 21400, target: 21550, confidence: 85 },
-        { symbol: 'FINNIFTY', type: 'SELL', entry: 18500, sl: 18600, target: 18300, confidence: 82 }
-    ];
-    
-    const random = signals[Math.floor(Math.random() * signals.length)];
-    
+function showQuickSignal(symbol, price, confidence) {
     showPopup({
-        symbol: random.symbol,
-        type: random.type,
-        entry: random.entry.toFixed(2),
-        stoploss: random.sl.toFixed(2),
-        targets: [random.target.toFixed(2)],
-        confidence: random.confidence + '%'
+        symbol: symbol,
+        type: 'BUY',
+        entry: price.toFixed(2),
+        sl: (price * 0.98).toFixed(2),
+        target: (price * 1.03).toFixed(2),
+        confidence: confidence,
+        setup: 'Quick Signal'
     });
 }
 
 function showPopup(data) {
     document.getElementById('pop-symbol').textContent = data.symbol;
-    document.getElementById('pop-type').textContent = (data.type === 'BUY' ? '🟢' : '🔴') + ' ' + data.type;
-    document.getElementById('pop-entry').textContent = data.entry;
-    document.getElementById('pop-sl').textContent = data.stoploss;
-    document.getElementById('pop-tgt').textContent = data.targets[0];
-    document.getElementById('pop-conf').textContent = data.confidence + ' High Probability';
+    document.getElementById('pop-type').textContent = '🟢 BUY SIGNAL';
+    document.getElementById('pop-entry').textContent = '₹' + data.entry;
+    document.getElementById('pop-sl').textContent = '₹' + data.sl;
+    document.getElementById('pop-tgt').textContent = '₹' + data.target;
+    document.getElementById('pop-conf').textContent = data.confidence + '%';
     
-    const conf = parseInt(data.confidence);
-    document.getElementById('pop-confidence-bar').style.width = conf + '%';
+    const entry = parseFloat(data.entry);
+    const sl = parseFloat(data.sl);
+    const tgt = parseFloat(data.target);
+    const risk = entry - sl;
+    const reward = tgt - entry;
+    const ratio = (reward / risk).toFixed(1);
+    
+    document.getElementById('pop-ratio').textContent = `1:${ratio}`;
+    document.getElementById('pop-confidence-bar').style.width = data.confidence + '%';
+    document.getElementById('pop-setup-info').innerHTML = `
+        <p><strong>Setup:</strong> ${data.setup}</p>
+        <p><strong>Risk:</strong> ₹${risk.toFixed(2)} | <strong>Reward:</strong> ₹${reward.toFixed(2)}</p>
+        <p class="mt-2 text-yellow-400">⚠️ Win Probability: ${data.confidence}% | Loss Risk: ${(100 - data.confidence)}%</p>
+    `;
     
     document.getElementById('trade-popup').classList.add('show');
-    playSound('alert');
 }
 
 function closePopup() {
@@ -829,30 +821,40 @@ function closePopup() {
 
 function executeTrade() {
     const symbol = document.getElementById('pop-symbol').textContent;
-    const order = {
-        id: userState.orders.length + 1,
+    const entry = parseFloat(document.getElementById('pop-entry').textContent.replace('₹', ''));
+    const sl = parseFloat(document.getElementById('pop-sl').textContent.replace('₹', ''));
+    const tgt = parseFloat(document.getElementById('pop-tgt').textContent.replace('₹', ''));
+    
+    const newOrder = {
+        id: 'ORD-' + Date.now(),
         symbol: symbol,
-        type: document.getElementById('pop-type').textContent.includes('BUY') ? 'BUY' : 'SELL',
-        qty: Math.floor(Math.random() * 100) + 10,
-        price: parseFloat(document.getElementById('pop-entry').textContent),
-        status: 'EXECUTED',
-        time: new Date().toLocaleTimeString()
+        type: 'BUY',
+        entry: entry,
+        sl: sl,
+        tgt: tgt,
+        qty: Math.floor(Math.random() * 50) + 10,
+        status: 'ACTIVE',
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     };
     
-    userState.orders.unshift(order);
-    userState.balance -= (order.qty * order.price * 0.1);
+    appState.orders.unshift(newOrder);
+    appState.user.balance -= (entry * newOrder.qty * 0.1);
     
-    updateUserUI();
-    alert('✅ ORDER PLACED!\n\nSymbol: ' + symbol + '\nQty: ' + order.qty + '\nPrice: ₹' + order.price);
+    updateOrdersUI();
+    updateAllUI();
+    alert('✅ ORDER PLACED!\n\n' + symbol + ' @ ₹' + entry + '\nQty: ' + newOrder.qty + '\nSL: ₹' + sl + '\nTarget: ₹' + tgt);
     closePopup();
     playSound('success');
 }
 
-// ============ NAVIGATION ============
+// ============================================
+// NAVIGATION
+// ============================================
+
 function navScreen(screen) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const el = document.getElementById('screen-' + screen);
-    if (el) el.classList.add('active');
+    const target = document.getElementById('screen-' + screen);
+    if (target) target.classList.add('active');
     toggleSidebar();
     window.scrollTo(0, 0);
 }
@@ -871,58 +873,73 @@ function toggleSidebar() {
 function switchAuthTab(tab) {
     document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
     document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
-    document.getElementById('login-tab').classList.toggle('bg-yellow-400', tab === 'login');
-    document.getElementById('login-tab').classList.toggle('text-black', tab === 'login');
-}
-
-// ============ UTILITY FUNCTIONS ============
-function editProfile() {
-    const name = prompt('New name:', userState.userName);
-    if (name) {
-        userState.userName = name;
-        updateUserUI();
-        alert('✅ Profile updated!');
-    }
-}
-
-function simulateDeposit() {
-    const amount = prompt('Deposit amount:', '10000');
-    if (amount) {
-        userState.balance += parseInt(amount);
-        userState.transactions.unshift({
-            type: 'deposit',
-            amount: parseInt(amount),
-            date: new Date().toLocaleDateString(),
-            time: new Date().toLocaleTimeString()
-        });
-        updateUserUI();
-        alert('✅ ₹' + amount + ' deposited!');
-        playSound('success');
-    }
-}
-
-function simulateWithdraw() {
-    const amount = prompt('Withdraw amount:', '5000');
-    if (amount && parseInt(amount) <= userState.balance) {
-        userState.balance -= parseInt(amount);
-        updateUserUI();
-        alert('✅ ₹' + amount + ' withdraw request submitted!');
-        playSound('success');
+    
+    const loginTab = document.getElementById('login-tab');
+    const signupTab = document.getElementById('signup-tab');
+    
+    if (tab === 'login') {
+        loginTab.classList.add('bg-yellow-400', 'text-black');
+        loginTab.classList.remove('text-gray-400');
+        signupTab.classList.remove('bg-yellow-400', 'text-black');
+        signupTab.classList.add('text-gray-400');
     } else {
-        alert('❌ Insufficient balance');
+        signupTab.classList.add('bg-yellow-400', 'text-black');
+        signupTab.classList.remove('text-gray-400');
+        loginTab.classList.remove('bg-yellow-400', 'text-black');
+        loginTab.classList.add('text-gray-400');
     }
 }
+
+// ============================================
+// BROKER MANAGEMENT
+// ============================================
 
 function linkBroker(broker) {
-    alert('✅ ' + broker.toUpperCase() + ' linked successfully!');
-    if (!userState.brokers.includes(broker)) {
-        userState.brokers.push(broker);
+    const brokerName = broker.toUpperCase();
+    if (!appState.linkedBrokers.includes(brokerName)) {
+        appState.linkedBrokers.push(brokerName);
+        alert(`✅ ${brokerName} connected successfully!\n\nNow you can execute trades directly.`);
+        updateBrokerUI();
+        playSound('success');
+    } else {
+        alert(`${brokerName} is already connected.`);
     }
 }
+
+// ============================================
+// SETTINGS
+// ============================================
 
 function toggleSwitch(el) {
     el.classList.toggle('on');
 }
+
+// ============================================
+// MARKET STATUS
+// ============================================
+
+function updateMarketStatus() {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay();
+    
+    const isOpen = hour >= 9 && hour < 16 && day !== 0 && day !== 6;
+    const statusEl = document.getElementById('header-status');
+    
+    if (isOpen) {
+        statusEl.innerHTML = '🟢 LIVE MARKET';
+        statusEl.classList.remove('text-red-400');
+        statusEl.classList.add('text-green-400');
+    } else {
+        statusEl.innerHTML = '🔴 MARKET CLOSED';
+        statusEl.classList.remove('text-green-400');
+        statusEl.classList.add('text-red-400');
+    }
+}
+
+// ============================================
+// SOUND SYSTEM
+// ============================================
 
 function playSound(type) {
     try {
@@ -946,6 +963,12 @@ function playSound(type) {
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
             osc.start();
             osc.stop(ctx.currentTime + 0.5);
+        } else if (type === 'tick') {
+            osc.frequency.setValueAtTime(300, ctx.currentTime);
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.05);
         }
     } catch (e) {
         console.log('Audio unavailable');
@@ -955,7 +978,7 @@ function playSound(type) {
 // Initialize
 updateMarketStatus();
 setInterval(updateMarketStatus, 60000);
-console.log('✅ VeloxTrade Pro Loaded');
+console.log('✅ VeloxTrade Pro Loaded Successfully');
 </script>
 
 </body>
